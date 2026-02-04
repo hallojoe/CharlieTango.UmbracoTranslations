@@ -7,78 +7,76 @@
   <style>
     :root{
       --bg: #0f141a;
-      --panel: #141b23;
-      --panel-2: #0f141a;
       --text: #e6edf3;
       --muted: #9aa4b2;
       --line: #273141;
-      --accent: #4aa3ff;
-      --warning: #ffcc66;
       --ok: #4bd37b;
       --radius: 10px;
       --pad: 12px;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --sans: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --sans: system-ui, -apple-system, Segoe UI, Roboto, Arial;
     }
 
     body{
       margin:0;
       font-family: var(--sans);
-      background: linear-gradient(180deg, #0b1016, var(--bg));
+      background: var(--bg);
       color: var(--text);
     }
 
     .topbar{
       padding: 14px 16px;
       border-bottom: 1px solid var(--line);
-      background: rgba(12, 16, 22, 0.8);
-      backdrop-filter: blur(8px);
+      display:flex;
+      gap: 12px;
+      align-items:center;
       position: sticky;
       top: 0;
+      background: rgba(15,20,26,0.9);
+      backdrop-filter: blur(6px);
       z-index: 10;
-      display:flex;
-      align-items:center;
-      gap: 12px;
     }
 
     .crumbs{
-      display:flex;
-      align-items:center;
-      gap: 8px;
-      min-width: 240px;
       flex: 1;
+      display:flex;
+      gap: 8px;
+      color: var(--muted);
+      min-width: 240px;
+      align-items: center;
+      overflow:hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
-
-    .crumbs strong{ font-weight: 600; }
-    .crumbs span{ color: var(--muted); }
+    .crumbs strong{ color: var(--text); }
 
     .controls{
       display:flex;
       gap: 10px;
-      align-items:center;
       flex-wrap: wrap;
+      align-items:center;
+      justify-content:flex-end;
+    }
+
+    input[type="search"],
+    .btn{
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #0b1016;
+      color: var(--text);
     }
 
     input[type="search"]{
       width: min(360px, 60vw);
-      padding: 10px 12px;
-      border-radius: 8px;
-      border: 1px solid var(--line);
-      background: #0b1016;
-      color: var(--text);
       outline: none;
     }
 
     .btn{
-      border: 1px solid var(--line);
-      background: #0b1016;
-      color: var(--text);
-      padding: 10px 12px;
-      border-radius: 8px;
       cursor: pointer;
       user-select: none;
     }
-    .btn:active{ transform: translateY(1px); }
+
     .btn[aria-pressed="true"]{
       border-color: rgba(74,163,255,0.7);
       box-shadow: 0 0 0 2px rgba(74,163,255,0.15) inset;
@@ -86,7 +84,7 @@
 
     .wrap{
       padding: 16px;
-      max-width: 1200px;
+      max-width: 1100px;
       margin: 0 auto;
     }
 
@@ -118,7 +116,6 @@
       background: rgba(15,20,26,0.55);
     }
 
-    /* Hide default marker */
     summary::-webkit-details-marker { display:none; }
     summary::marker{ content:""; }
 
@@ -161,7 +158,6 @@
       gap: 8px;
       min-width: 200px;
     }
-
     input[type="range"]{
       width: 120px;
       accent-color: var(--ok);
@@ -178,37 +174,16 @@
       gap: 12px;
     }
 
-    .key-body{
-      display:grid;
-      gap: 12px;
-      grid-template-columns: 1.4fr 1fr;
-    }
-
-    @media (max-width: 900px){
-      .key-body{ grid-template-columns: 1fr; }
-      .progress{ min-width: 160px; }
-      input[type="range"]{ width: 100px; }
-    }
-
-    .card{
+    .translations{
       border: 1px solid var(--line);
       border-radius: var(--radius);
       background: rgba(11,16,22,0.65);
       padding: 12px;
     }
 
-    .card h4{
-      margin: 0 0 10px 0;
-      font-size: 12px;
-      letter-spacing: 0.6px;
-      color: var(--muted);
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-
     .lang-row{
       display:grid;
-      grid-template-columns: 140px 1fr;
+      grid-template-columns: 160px 1fr;
       gap: 10px;
       align-items:center;
       padding: 8px 0;
@@ -251,54 +226,27 @@
       box-shadow: 0 0 0 2px rgba(255,204,102,0.08) inset;
     }
 
-    .kv{
-      display:grid;
-      grid-template-columns: 140px 1fr;
-      gap: 10px;
-      font-size: 13px;
-      color: var(--text);
-      padding: 6px 0;
-      border-top: 1px solid rgba(39,49,65,0.55);
-    }
-    .kv:first-child{ border-top: none; padding-top: 0; }
-    .kv .k{ color: var(--muted); }
-    .kv .v{ font-family: var(--mono); color: #d7dee6; }
-
-    .placeholder{
-      height: 140px;
-      border-radius: 10px;
-      border: 1px dashed rgba(154,164,178,0.35);
-      display:grid;
-      place-items:center;
-      color: rgba(154,164,178,0.9);
-      background: rgba(15,20,26,0.2);
-      font-size: 13px;
-    }
-
-    .subtle{
+    .empty{
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(11,16,22,0.65);
+      padding: 12px;
       color: var(--muted);
-      font-size: 12px;
     }
   </style>
 </head>
 <body>
   <header class="topbar">
     <div class="crumbs">
-      <strong>Dashboard</strong>
-      <span>/</span>
-      <strong>My Project</strong>
-      <span>/</span>
+      <strong>Dashboard</strong><span>/</span>
+      <strong>My Project</strong><span>/</span>
       <span>Translations</span>
     </div>
 
     <div class="controls">
-      <input id="q" type="search" placeholder="Search translations…" />
-      <button id="sort" class="btn" aria-pressed="true" title="Toggle sort">
-        Sort: Alphabetical
-      </button>
-      <button id="expandAll" class="btn" title="Expand/collapse all groups">
-        Expand all
-      </button>
+      <input id="q" type="search" placeholder="Search keys…" />
+      <button id="sort" class="btn" aria-pressed="true">Sort: Alphabetical</button>
+      <button id="expandAll" class="btn">Expand all</button>
     </div>
   </header>
 
@@ -307,89 +255,90 @@
   </main>
 
   <script>
-    // --- Sample data (replace with your real model later) --------------------
-    const data = [
-      {
-        group: "ACHIEVEMENTS",
-        keys: [
-          {
-            key: "ACHIEVEMENTS.FIRST_LOGIN",
-            createdAt: "2025-07-01 11:03",
-            lastSeenAt: "2025-07-01 11:04",
-            source: "Web UI",
-            namespace: "no namespace",
-            translations: [
-              { langName: "English", code: "en-GB", value: "{name} logged in" },
-              { langName: "Polish",  code: "pl-PL", value: "" },
-              { langName: "German",  code: "de-DE", value: "" },
-              { langName: "Spanish", code: "es-ES", value: "" },
-              { langName: "French",  code: "fr-FR", value: "" },
-            ],
-          },
-        ],
+    // -----------------------------------------------------------------------
+    // INPUT MODEL (your real app will provide these)
+    // -----------------------------------------------------------------------
+    const translationsByIso = {
+      en: {
+        "ACHIEVEMENTS.FIRST_LOGIN": "{name} logged in",
+        "ACTIVITY.COMMENT_ADD": "{name} added a comment",
+        "ACTIVITY.PHOTO_ADD": "{name} added photo",
+        "CREATE.ADDRESS": "Create address",
       },
-      {
-        group: "ACTIVITY",
-        keys: [
-          {
-            key: "ACTIVITY.COMMENT_ADD",
-            createdAt: "2025-07-01 11:01",
-            lastSeenAt: "2025-07-01 11:02",
-            source: "Web UI",
-            namespace: "no namespace",
-            translations: [
-              { langName: "English", code: "en-GB", value: "{name} added a comment" },
-              { langName: "Polish",  code: "pl-PL", value: "{name} dodał komentarz" },
-              { langName: "German",  code: "de-DE", value: "" },
-              { langName: "Spanish", code: "es-ES", value: "" },
-              { langName: "French",  code: "fr-FR", value: "" },
-            ],
-          },
-          {
-            key: "ACTIVITY.PHOTO_ADD",
-            createdAt: "2025-07-01 11:03",
-            lastSeenAt: "2025-07-01 11:04",
-            source: "Web UI",
-            namespace: "no namespace",
-            translations: [
-              { langName: "English", code: "en-GB", value: "{name} added photo" },
-              { langName: "Polish",  code: "pl-PL", value: "{name} dodał zdjęcie" },
-              { langName: "German",  code: "de-DE", value: "{name} hinzugefügtes Foto" },
-              { langName: "Spanish", code: "es-ES", value: "{name} agregó foto" },
-              { langName: "French",  code: "fr-FR", value: "{name} a ajouté une photo" },
-            ],
-          },
-        ],
+      da: {
+        "ACHIEVEMENTS.FIRST_LOGIN": "",
+        "ACTIVITY.COMMENT_ADD": "{name} tilføjede en kommentar",
+        "ACTIVITY.PHOTO_ADD": "{name} tilføjede et billede",
+        "CREATE.ADDRESS": "",
       },
-      {
-        group: "CREATE",
-        keys: [
-          {
-            key: "CREATE.ADDRESS",
-            createdAt: "2025-07-01 10:55",
-            lastSeenAt: "2025-07-01 10:59",
-            source: "API",
-            namespace: "no namespace",
-            translations: [
-              { langName: "English", code: "en-GB", value: "Create address" },
-              { langName: "Polish",  code: "pl-PL", value: "" },
-              { langName: "German",  code: "de-DE", value: "" },
-              { langName: "Spanish", code: "es-ES", value: "" },
-              { langName: "French",  code: "fr-FR", value: "" },
-            ],
-          },
-        ],
+      de: {
+        "ACTIVITY.PHOTO_ADD": "{name} hat ein Foto hinzugefügt",
       }
-    ];
+    };
 
-    // --- Helpers ------------------------------------------------------------
-    function computeProgress(translations){
-      const total = translations.length;
-      const done = translations.filter(t => (t.value ?? "").trim().length > 0).length;
+    const isoToName = {
+      en: "English",
+      da: "Danish",
+      de: "German"
+    };
+
+    // -----------------------------------------------------------------------
+    // DERIVED MODEL BUILDING
+    // -----------------------------------------------------------------------
+    const listEl = document.getElementById("list");
+    const qEl = document.getElementById("q");
+    const sortBtn = document.getElementById("sort");
+    const expandAllBtn = document.getElementById("expandAll");
+
+    let sortAlpha = true;
+
+    function getAllIsos() {
+      // languages present in translationsByIso, stable order:
+      // 1) any isoToName order (if keys present), 2) fallback to object order.
+      const isos = Object.keys(translationsByIso);
+      // if isoToName contains a subset/superset, we still only show those in translationsByIso.
+      return isos;
+    }
+
+    function getAllKeys(isos) {
+      const set = new Set();
+      for (const iso of isos) {
+        const dict = translationsByIso[iso] || {};
+        for (const k of Object.keys(dict)) set.add(k);
+      }
+      return [...set];
+    }
+
+    function groupForKey(key) {
+      // Simple grouping rule: prefix before first "."
+      const idx = key.indexOf(".");
+      return idx > 0 ? key.slice(0, idx) : "UNGROUPED";
+    }
+
+    function computeProgressForKey(key, isos) {
+      const total = isos.length;
+      let done = 0;
+      for (const iso of isos) {
+        const v = (translationsByIso[iso]?.[key] ?? "").trim();
+        if (v.length > 0) done++;
+      }
       return { done, total };
     }
 
+    // -----------------------------------------------------------------------
+    // RENDER
+    // -----------------------------------------------------------------------
     function normalize(s){ return (s ?? "").toLowerCase(); }
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, c => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[c]));
+    }
+
+    function escapeAttr(s){
+      return escapeHtml(s).replace(/\n/g, "&#10;");
+    }
 
     function el(html){
       const t = document.createElement("template");
@@ -397,45 +346,54 @@
       return t.content.firstElementChild;
     }
 
-    // --- Render -------------------------------------------------------------
-    const list = document.getElementById("list");
-    const q = document.getElementById("q");
-    const sortBtn = document.getElementById("sort");
-    const expandAllBtn = document.getElementById("expandAll");
+    function syncTwisty(detailsEl){
+      const t = detailsEl.querySelector(":scope > summary .twisty");
+      if (!t) return;
+      t.textContent = detailsEl.open ? "▾" : "▸";
+    }
 
-    let sortAlpha = true;
+    function buildViewModel() {
+      const isos = getAllIsos();
+      const allKeys = getAllKeys(isos);
+
+      const query = normalize(qEl.value);
+      const filteredKeys = allKeys.filter(k => normalize(k).includes(query));
+
+      // group -> keys[]
+      const groups = new Map();
+      for (const key of filteredKeys) {
+        const g = groupForKey(key);
+        if (!groups.has(g)) groups.set(g, []);
+        groups.get(g).push(key);
+      }
+
+      // sort groups by name, keys by name (optional)
+      const groupNames = [...groups.keys()].sort((a,b) => a.localeCompare(b));
+      const result = groupNames.map(group => {
+        let keys = groups.get(group);
+        if (sortAlpha) keys = [...keys].sort((a,b) => a.localeCompare(b));
+        return { group, keys };
+      });
+
+      return { isos, groups: result };
+    }
 
     function render(){
-      const query = normalize(q.value);
+      const { isos, groups } = buildViewModel();
+      listEl.innerHTML = "";
 
-      // Copy + filter
-      let groups = data
-        .map(g => ({
-          ...g,
-          keys: g.keys.filter(k => normalize(k.key).includes(query))
-        }))
-        .filter(g => g.keys.length > 0);
+      if (!groups.length) {
+        listEl.appendChild(el(`<div class="empty">No matches. Try a different search term.</div>`));
+        return;
+      }
 
-      // Sort keys (optional)
-      groups = groups.map(g => ({
-        ...g,
-        keys: [...g.keys].sort((a,b) => sortAlpha
-          ? a.key.localeCompare(b.key)
-          : 0
-        )
-      }));
-
-      // Clear
-      list.innerHTML = "";
-
-      // Render groups
-      for (const g of groups){
+      for (const g of groups) {
         const groupDetails = el(`
           <details open>
             <summary>
               <span class="twisty">▸</span>
               <span class="title">${escapeHtml(g.group)}</span>
-              <span class="meta"><span class="subtle">${g.keys.length} keys</span></span>
+              <span class="meta">${g.keys.length} keys</span>
             </summary>
             <div class="content"></div>
           </details>
@@ -443,13 +401,14 @@
 
         const content = groupDetails.querySelector(".content");
 
-        for (const k of g.keys){
-          const { done, total } = computeProgress(k.translations);
+        for (const key of g.keys) {
+          const { done, total } = computeProgressForKey(key, isos);
+
           const keyDetails = el(`
             <details>
               <summary>
                 <span class="twisty">▸</span>
-                <span class="title">${escapeHtml(k.key)}</span>
+                <span class="title">${escapeHtml(key)}</span>
                 <span class="meta">
                   <span class="progress">
                     <input type="range" min="0" max="${total}" value="${done}" readonly />
@@ -459,43 +418,29 @@
               </summary>
 
               <div class="content">
-                <div class="key-body">
-                  <section class="card">
-                    <h4>Translations</h4>
-                    <div class="translations"></div>
-                  </section>
-
-                  <aside class="card">
-                    <h4>Key details</h4>
-                    <div class="kv"><div class="k">Created</div><div class="v">${escapeHtml(k.createdAt)}</div></div>
-                    <div class="kv"><div class="k">Last seen</div><div class="v">${escapeHtml(k.lastSeenAt)}</div></div>
-                    <div class="kv"><div class="k">Source</div><div class="v">${escapeHtml(k.source)}</div></div>
-                    <div class="kv"><div class="k">Namespace</div><div class="v">${escapeHtml(k.namespace)}</div></div>
-
-                    <div style="height:10px"></div>
-
-                    <h4>Screenshot</h4>
-                    <div class="placeholder">Upload screenshot (placeholder)</div>
-                  </aside>
-                </div>
+                <div class="translations"></div>
               </div>
             </details>
           `);
 
           const translationsEl = keyDetails.querySelector(".translations");
+          translationsEl.className = "translations";
 
-          for (const t of k.translations){
-            const missing = (t.value ?? "").trim().length === 0;
+          for (const iso of isos) {
+            const langName = isoToName[iso] ?? iso;
+            const value = translationsByIso[iso]?.[key] ?? "";
+            const missing = String(value).trim().length === 0;
+
             const row = el(`
               <div class="lang-row">
                 <div class="lang">
-                  <strong>${escapeHtml(t.langName)}</strong>
-                  <span>${escapeHtml(t.code)}</span>
+                  <strong>${escapeHtml(langName)}</strong>
+                  <span>${escapeHtml(iso)}</span>
                 </div>
                 <div class="value">
                   <input
                     type="text"
-                    value="${escapeAttr(t.value ?? "")}"
+                    value="${escapeAttr(value)}"
                     placeholder="(missing)"
                     data-missing="${missing}"
                   />
@@ -503,54 +448,30 @@
               </div>
             `);
 
-            // In this mock, inputs are editable; remove this if you want read-only.
-            // row.querySelector("input").readOnly = true;
-
             translationsEl.appendChild(row);
           }
+
+          // twisties
+          keyDetails.addEventListener("toggle", () => syncTwisty(keyDetails));
+          syncTwisty(keyDetails);
 
           content.appendChild(keyDetails);
         }
 
-        // Rotate twisty arrow based on open/closed
         groupDetails.addEventListener("toggle", () => syncTwisty(groupDetails));
+        syncTwisty(groupDetails);
+
+        // sync nested twisties when toggling inside
         content.querySelectorAll("details").forEach(d => d.addEventListener("toggle", () => syncTwisty(d)));
 
-        // Set initial twisty states
-        syncTwisty(groupDetails);
-        content.querySelectorAll("details").forEach(syncTwisty);
-
-        list.appendChild(groupDetails);
-      }
-
-      if (!groups.length){
-        list.appendChild(el(`
-          <div class="card">
-            <h4>No matches</h4>
-            <div class="subtle">Try a different search term.</div>
-          </div>
-        `));
+        listEl.appendChild(groupDetails);
       }
     }
 
-    function syncTwisty(detailsEl){
-      const t = detailsEl.querySelector(":scope > summary .twisty");
-      if (!t) return;
-      t.textContent = detailsEl.open ? "▾" : "▸";
-    }
-
-    function escapeHtml(s){
-      return String(s).replace(/[&<>"']/g, c => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-      }[c]));
-    }
-    function escapeAttr(s){
-      // for attribute/value context
-      return escapeHtml(s).replace(/\n/g, "&#10;");
-    }
-
-    // --- Events -------------------------------------------------------------
-    q.addEventListener("input", render);
+    // -----------------------------------------------------------------------
+    // EVENTS
+    // -----------------------------------------------------------------------
+    qEl.addEventListener("input", render);
 
     sortBtn.addEventListener("click", () => {
       sortAlpha = !sortAlpha;
@@ -561,7 +482,7 @@
 
     expandAllBtn.addEventListener("click", () => {
       const groups = [...document.querySelectorAll("#list > details")];
-      const allOpen = groups.every(d => d.open);
+      const allOpen = groups.length > 0 && groups.every(d => d.open);
       groups.forEach(d => d.open = !allOpen);
       groups.forEach(syncTwisty);
       expandAllBtn.textContent = allOpen ? "Expand all" : "Collapse all";
