@@ -1,0 +1,36 @@
+using Asp.Versioning;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Umbraco.Cms.Core.Models.Membership;
+using Umbraco.Cms.Core.Security;
+
+namespace CharlieTango.UmbracoTranslations.Controllers;
+
+[ApiVersion(Constants.ApiVersion1)]
+[ApiExplorerSettings(GroupName = Constants.ApiGroupName)]
+public class UmbracoTranslationsApiController(IBackOfficeSecurityAccessor backOfficeSecurityAccessor)
+    : UmbracoTranslationsApiControllerBase
+{
+    [HttpGet("ping")]
+    [ProducesResponseType<string>(StatusCodes.Status200OK)]
+    public string Ping() => "Pong";
+
+    [HttpGet("whatsTheTimeMrWolf")]
+    [ProducesResponseType(typeof(DateTime), 200)]
+    public DateTime WhatsTheTimeMrWolf() => DateTime.Now;
+
+    [HttpGet("whatsMyName")]
+    [ProducesResponseType<string>(StatusCodes.Status200OK)]
+    public string WhatsMyName()
+    {
+        // So we can see a long request in the dashboard with a spinning progress wheel
+        Thread.Sleep(2000);
+
+        var currentUser = backOfficeSecurityAccessor.BackOfficeSecurity?.CurrentUser;
+        return currentUser?.Name ?? "I have no idea who you are";
+    }
+
+    [HttpGet("whoAmI")]
+    [ProducesResponseType<IUser>(StatusCodes.Status200OK)]
+    public IUser? WhoAmI() => backOfficeSecurityAccessor.BackOfficeSecurity?.CurrentUser;
+}

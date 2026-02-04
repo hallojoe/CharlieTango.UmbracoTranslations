@@ -1,0 +1,14 @@
+{
+    "$schema": "https://marketplace.umbraco.com/umbraco-marketplace-schema.json", 
+    "AuthorDetails": {
+      "Name": "Casper Korsgaard",
+      "ImageUrl": "https://github.com/hallojoe.png"
+    },
+    "Category": "",
+    "Description": "",
+    "LicenseTypes": [ "Free" ],
+    "IssueTrackerUrl": "https://github.com/hallojoe/CharlieTango.UmbracoTranslations/issues",
+    "PackageType": "Package",
+    "Tags": [],
+    "Title": "Charlie Tango .Umbraco Translations "
+  }

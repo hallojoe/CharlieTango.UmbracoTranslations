@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <StaticWebAssetBasePath>/</StaticWebAssetBasePath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Product>Umbraco.Community.CharlieTango.UmbracoTranslations</Product>
+    <PackageId>Umbraco.Community.CharlieTango.UmbracoTranslations</PackageId>
+    <Title>Charlie Tango .Umbraco Translations </Title>
+    <Description>...</Description>
+    <PackageTags>umbraco;umbraco-marketplace</PackageTags>
+    <Authors>Casper Korsgaard</Authors>
+    <Copyright>$([System.DateTime]::UtcNow.ToString(`yyyy`)) © Casper Korsgaard</Copyright>
+    <PackageProjectUrl>https://github.com/hallojoe/CharlieTango.UmbracoTranslations</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/hallojoe/CharlieTango.UmbracoTranslations</RepositoryUrl>
+    <PackageReadmeFile>README_nuget.md</PackageReadmeFile>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageIcon></PackageIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms.Web.Website" Version="*" />
+    <PackageReference Include="Umbraco.Cms.Web.Common" Version="*" />
+    <PackageReference Include="Umbraco.Cms.Api.Common" Version="*" />
+    <PackageReference Include="Umbraco.Cms.Api.Management" Version="*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Dont include the client folder as part of packaging nuget build -->
+    <Content Remove="Client\**" />
+
+    <!-- However make the Umbraco-package.json included for dotnet pack or nuget package and visible to the solution -->
+    <None Include="Client\public\umbraco-package.json" Pack="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\docs\README_nuget.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Delivery\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CharlieTango.UmbracoTranslations.ApiClient\CharlieTango.UmbracoTranslations.ApiClient.csproj" />
+    <ProjectReference Include="..\CharlieTango.UmbracoTranslations.Extensions\CharlieTango.UmbracoTranslations.Extensions.csproj" />
+  </ItemGroup>
+
+</Project>
