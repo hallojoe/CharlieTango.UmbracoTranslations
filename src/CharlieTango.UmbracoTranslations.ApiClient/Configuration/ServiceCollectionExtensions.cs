@@ -6,7 +6,7 @@ namespace CharlieTango.UmbracoTranslations.ApiClient.Configuration;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddFrontendApiClient(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddUmbracoTranslationsApiClient(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<ApiSettings>(configuration.GetSection(ApiSettings.Key));
 
