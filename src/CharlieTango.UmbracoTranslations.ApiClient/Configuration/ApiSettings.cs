@@ -13,7 +13,7 @@ public class ApiSettings
     /// The key used to locate the configuration section for API settings,
     /// e.g., "UmbracoTranslations.UmbracoTranslationsApiClient".
     /// </summary>
-    public const string Key = "UmbracoTranslations.UmbracoTranslationsApiClient";
+    public const string Key = "UmbracoTranslations:UmbracoTranslationsApiClient";
 
     /// <summary>
     /// Base URL of the API, e.g., "https://example.com/api/TranslationsApi/"

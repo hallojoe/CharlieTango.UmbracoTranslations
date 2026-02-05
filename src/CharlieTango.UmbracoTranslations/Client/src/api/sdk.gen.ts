@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { PingData, PingErrors, PingResponses, WhatsMyNameData, WhatsMyNameErrors, WhatsMyNameResponses, WhatsTheTimeMrWolfData, WhatsTheTimeMrWolfErrors, WhatsTheTimeMrWolfResponses, WhoAmIData, WhoAmIErrors, WhoAmIResponses } from './types.gen';
+import type { GetFromFrontendData, GetFromFrontendErrors, GetFromFrontendResponses, GetFromHybridData, GetFromHybridErrors, GetFromHybridResponses, GetFromUmbracoData, GetFromUmbracoErrors, GetFromUmbracoResponses, GetLanguagesData, GetLanguagesErrors, GetLanguagesResponses, SaveDictionaryItemData, SaveDictionaryItemErrors, SaveDictionaryItemResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -19,54 +19,71 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 };
 
 export class CharlieTangoUmbracoTranslationsService {
-    public static ping<ThrowOnError extends boolean = false>(options?: Options<PingData, ThrowOnError>) {
-        return (options?.client ?? client).get<PingResponses, PingErrors, ThrowOnError>({
+    public static getFromUmbraco<ThrowOnError extends boolean = false>(options?: Options<GetFromUmbracoData, ThrowOnError>) {
+        return (options?.client ?? client).get<GetFromUmbracoResponses, GetFromUmbracoErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
                     type: 'http'
                 }
             ],
-            url: '/umbraco/charlietangoumbracotranslations/api/v1/ping',
+            url: '/umbraco/umbracotranslations/api/v1/cms',
             ...options
         });
     }
     
-    public static whatsMyName<ThrowOnError extends boolean = false>(options?: Options<WhatsMyNameData, ThrowOnError>) {
-        return (options?.client ?? client).get<WhatsMyNameResponses, WhatsMyNameErrors, ThrowOnError>({
+    public static saveDictionaryItem<ThrowOnError extends boolean = false>(options?: Options<SaveDictionaryItemData, ThrowOnError>) {
+        return (options?.client ?? client).post<SaveDictionaryItemResponses, SaveDictionaryItemErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
                     type: 'http'
                 }
             ],
-            url: '/umbraco/charlietangoumbracotranslations/api/v1/whatsMyName',
+            url: '/umbraco/umbracotranslations/api/v1/dictionary',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options?.headers
+            }
+        });
+    }
+    
+    public static getFromFrontend<ThrowOnError extends boolean = false>(options?: Options<GetFromFrontendData, ThrowOnError>) {
+        return (options?.client ?? client).get<GetFromFrontendResponses, GetFromFrontendErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/umbracotranslations/api/v1/frontend',
             ...options
         });
     }
     
-    public static whatsTheTimeMrWolf<ThrowOnError extends boolean = false>(options?: Options<WhatsTheTimeMrWolfData, ThrowOnError>) {
-        return (options?.client ?? client).get<WhatsTheTimeMrWolfResponses, WhatsTheTimeMrWolfErrors, ThrowOnError>({
+    public static getFromHybrid<ThrowOnError extends boolean = false>(options?: Options<GetFromHybridData, ThrowOnError>) {
+        return (options?.client ?? client).get<GetFromHybridResponses, GetFromHybridErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
                     type: 'http'
                 }
             ],
-            url: '/umbraco/charlietangoumbracotranslations/api/v1/whatsTheTimeMrWolf',
+            url: '/umbraco/umbracotranslations/api/v1/hybrid',
             ...options
         });
     }
     
-    public static whoAmI<ThrowOnError extends boolean = false>(options?: Options<WhoAmIData, ThrowOnError>) {
-        return (options?.client ?? client).get<WhoAmIResponses, WhoAmIErrors, ThrowOnError>({
+    public static getLanguages<ThrowOnError extends boolean = false>(options?: Options<GetLanguagesData, ThrowOnError>) {
+        return (options?.client ?? client).get<GetLanguagesResponses, GetLanguagesErrors, ThrowOnError>({
             security: [
                 {
                     scheme: 'bearer',
                     type: 'http'
                 }
             ],
-            url: '/umbraco/charlietangoumbracotranslations/api/v1/whoAmI',
+            url: '/umbraco/umbracotranslations/api/v1/languages',
             ...options
         });
     }

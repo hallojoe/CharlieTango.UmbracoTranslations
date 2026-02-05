@@ -4,245 +4,135 @@ export type ClientOptions = {
     baseUrl: 'https://localhost:44313' | (string & {});
 };
 
-export type DocumentGranularPermissionModel = {
+export type EventMessageTypeModel = 'Default' | 'Info' | 'Error' | 'Success' | 'Warning';
+
+export type NotificationHeaderModel = {
+    message: string;
+    category: string;
+    type: EventMessageTypeModel;
+};
+
+export type SaveDictionaryItemRequest = {
     key: string;
-    readonly context: string;
-    permission: string;
+    culture: string;
+    value: string;
 };
 
-export type DocumentPropertyValueGranularPermissionModel = {
+export type SaveDictionaryItemResponse = {
     key: string;
-    readonly context: string;
-    permission: string;
+    culture: string;
+    value: string;
 };
 
-export type ReadOnlyUserGroupModel = {
-    id: number;
-    key: string;
-    name: string;
-    icon?: string | null;
-    startContentId?: number | null;
-    startMediaId?: number | null;
-    alias: string;
-    hasAccessToAllLanguages: boolean;
-    allowedLanguages: Array<number>;
-    permissions: Array<string>;
-    granularPermissions: Array<DocumentGranularPermissionModel | DocumentPropertyValueGranularPermissionModel | UnknownTypeGranularPermissionModel>;
-    allowedSections: Array<string>;
-};
-
-export type UnknownTypeGranularPermissionModel = {
-    context: string;
-    permission: string;
-};
-
-export type UserGroupModel = {
-    id: number;
-    key: string;
-    createDate: string;
-    updateDate: string;
-    deleteDate?: string | null;
-    readonly hasIdentity: boolean;
-    startMediaId?: number | null;
-    startContentId?: number | null;
-    icon?: string | null;
-    alias: string;
-    name?: string | null;
-    hasAccessToAllLanguages: boolean;
-    permissions: Array<string>;
-    granularPermissions: Array<DocumentGranularPermissionModel | DocumentPropertyValueGranularPermissionModel | UnknownTypeGranularPermissionModel>;
-    readonly allowedSections: Array<string>;
-    readonly userCount: number;
-    readonly allowedLanguages: Array<number>;
-};
-
-export type UserKindModel = 'Default' | 'Api';
-
-export type UserModel = {
-    id: number;
-    key: string;
-    createDate: string;
-    updateDate: string;
-    deleteDate?: string | null;
-    readonly hasIdentity: boolean;
-    emailConfirmedDate?: string | null;
-    invitedDate?: string | null;
-    username: string;
-    email: string;
-    rawPasswordValue?: string | null;
-    passwordConfiguration?: string | null;
-    isApproved: boolean;
-    isLockedOut: boolean;
-    lastLoginDate?: string | null;
-    lastPasswordChangeDate?: string | null;
-    lastLockoutDate?: string | null;
-    failedPasswordAttempts: number;
-    comments?: string | null;
-    userState: UserStateModel;
-    name?: string | null;
-    readonly allowedSections: Array<string>;
-    profileData: UserModel | UserProfileModel;
-    securityStamp?: string | null;
-    avatar?: string | null;
-    sessionTimeout: number;
-    startContentIds?: Array<number> | null;
-    startMediaIds?: Array<number> | null;
-    language?: string | null;
-    kind: UserKindModel;
-    readonly groups: Array<ReadOnlyUserGroupModel | UserGroupModel>;
-};
-
-export type UserProfileModel = {
-    id: number;
-    name?: string | null;
-};
-
-export type UserStateModel = 'Active' | 'Disabled' | 'LockedOut' | 'Invited' | 'Inactive' | 'All';
-
-export type DocumentGranularPermissionModelWritable = {
-    key: string;
-    permission: string;
-};
-
-export type DocumentPropertyValueGranularPermissionModelWritable = {
-    key: string;
-    permission: string;
-};
-
-export type UserGroupModelWritable = {
-    id: number;
-    key: string;
-    createDate: string;
-    updateDate: string;
-    deleteDate?: string | null;
-    startMediaId?: number | null;
-    startContentId?: number | null;
-    icon?: string | null;
-    alias: string;
-    name?: string | null;
-    hasAccessToAllLanguages: boolean;
-    permissions: Array<string>;
-    granularPermissions: Array<DocumentGranularPermissionModelWritable | DocumentPropertyValueGranularPermissionModelWritable | UnknownTypeGranularPermissionModel>;
-};
-
-export type UserModelWritable = {
-    id: number;
-    key: string;
-    createDate: string;
-    updateDate: string;
-    deleteDate?: string | null;
-    emailConfirmedDate?: string | null;
-    invitedDate?: string | null;
-    username: string;
-    email: string;
-    rawPasswordValue?: string | null;
-    passwordConfiguration?: string | null;
-    isApproved: boolean;
-    isLockedOut: boolean;
-    lastLoginDate?: string | null;
-    lastPasswordChangeDate?: string | null;
-    lastLockoutDate?: string | null;
-    failedPasswordAttempts: number;
-    comments?: string | null;
-    userState: UserStateModel;
-    name?: string | null;
-    securityStamp?: string | null;
-    avatar?: string | null;
-    sessionTimeout: number;
-    startContentIds?: Array<number> | null;
-    startMediaIds?: Array<number> | null;
-    language?: string | null;
-    kind: UserKindModel;
-};
-
-export type PingData = {
+export type GetFromUmbracoData = {
     body?: never;
     path?: never;
     query?: never;
-    url: '/umbraco/charlietangoumbracotranslations/api/v1/ping';
+    url: '/umbraco/umbracotranslations/api/v1/cms';
 };
 
-export type PingErrors = {
+export type GetFromUmbracoErrors = {
     /**
      * The resource is protected and requires an authentication token
      */
     401: unknown;
 };
 
-export type PingResponses = {
+export type GetFromUmbracoResponses = {
     /**
      * OK
      */
-    200: string;
+    200: unknown;
 };
 
-export type PingResponse = PingResponses[keyof PingResponses];
-
-export type WhatsMyNameData = {
-    body?: never;
+export type SaveDictionaryItemData = {
+    body?: SaveDictionaryItemRequest;
     path?: never;
     query?: never;
-    url: '/umbraco/charlietangoumbracotranslations/api/v1/whatsMyName';
+    url: '/umbraco/umbracotranslations/api/v1/dictionary';
 };
 
-export type WhatsMyNameErrors = {
+export type SaveDictionaryItemErrors = {
+    /**
+     * Bad Request
+     */
+    400: unknown;
     /**
      * The resource is protected and requires an authentication token
      */
     401: unknown;
 };
 
-export type WhatsMyNameResponses = {
+export type SaveDictionaryItemResponses = {
     /**
      * OK
      */
-    200: string;
+    200: SaveDictionaryItemResponse;
 };
 
-export type WhatsMyNameResponse = WhatsMyNameResponses[keyof WhatsMyNameResponses];
+export type SaveDictionaryItemResponse2 = SaveDictionaryItemResponses[keyof SaveDictionaryItemResponses];
 
-export type WhatsTheTimeMrWolfData = {
+export type GetFromFrontendData = {
     body?: never;
     path?: never;
     query?: never;
-    url: '/umbraco/charlietangoumbracotranslations/api/v1/whatsTheTimeMrWolf';
+    url: '/umbraco/umbracotranslations/api/v1/frontend';
 };
 
-export type WhatsTheTimeMrWolfErrors = {
+export type GetFromFrontendErrors = {
     /**
      * The resource is protected and requires an authentication token
      */
     401: unknown;
 };
 
-export type WhatsTheTimeMrWolfResponses = {
+export type GetFromFrontendResponses = {
     /**
      * OK
      */
-    200: string;
+    200: unknown;
 };
 
-export type WhatsTheTimeMrWolfResponse = WhatsTheTimeMrWolfResponses[keyof WhatsTheTimeMrWolfResponses];
-
-export type WhoAmIData = {
+export type GetFromHybridData = {
     body?: never;
     path?: never;
     query?: never;
-    url: '/umbraco/charlietangoumbracotranslations/api/v1/whoAmI';
+    url: '/umbraco/umbracotranslations/api/v1/hybrid';
 };
 
-export type WhoAmIErrors = {
+export type GetFromHybridErrors = {
     /**
      * The resource is protected and requires an authentication token
      */
     401: unknown;
 };
 
-export type WhoAmIResponses = {
+export type GetFromHybridResponses = {
     /**
      * OK
      */
-    200: UserModel;
+    200: unknown;
 };
 
-export type WhoAmIResponse = WhoAmIResponses[keyof WhoAmIResponses];
+export type GetLanguagesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/umbraco/umbracotranslations/api/v1/languages';
+};
+
+export type GetLanguagesErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type GetLanguagesResponses = {
+    /**
+     * OK
+     */
+    200: Array<string>;
+};
+
+export type GetLanguagesResponse = GetLanguagesResponses[keyof GetLanguagesResponses];

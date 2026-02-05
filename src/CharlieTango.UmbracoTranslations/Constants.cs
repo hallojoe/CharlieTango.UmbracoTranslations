@@ -3,7 +3,8 @@ namespace CharlieTango.UmbracoTranslations;
 public sealed class Constants
 {
     public const string ApiTitle = "Charlie Tango Umbraco Translations Backoffice API";
-    public const string ApiVersion1 = "v1";
+    public const string ApiVersion1 = "1.0";
+    public const string ApiVersion1dot0 = "1.0";
     public const string ApiName = "charlietangoumbracotranslations";
     public const string ApiGroupName = "CharlieTango.UmbracoTranslations";
     public const string ApiControllerNamespace = "CharlieTango.UmbracoTranslations.Controllers";

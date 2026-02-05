@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using CharlieTango.UmbracoTranslations.ApiClient.Configuration;
+using CharlieTango.UmbracoTranslations.BackOffice;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +18,23 @@ public class Composer : IComposer
 {
     public void Compose(IUmbracoBuilder builder)
     {
+        builder.Services.AddUmbracoTranslationsApiClient(builder.Config);
+        builder.Services.AddSingleton<FrontendApiTranslationsService>();
+        builder.Services.AddSingleton<CmsTranslationsService>();
+        builder.Services.AddSingleton<ICmsDictionaryService, CmsDictionaryService>();
+        builder.Services.AddSingleton<IDiffedStringTranslationsService, DiffTranslationsService>(serviceProvider =>
+        {
+            var frontendApiTranslationsService = serviceProvider.GetRequiredService<FrontendApiTranslationsService>();
+            var umbracoLocalizationServiceTranslationsService = serviceProvider.GetRequiredService<CmsTranslationsService>();
+            return new DiffTranslationsService(frontendApiTranslationsService, umbracoLocalizationServiceTranslationsService);
+        });
+
+        builder.Services.AddSingleton<IStringTranslationsService, HybridTranslationService>(serviceProvider =>
+        {
+            var frontendApiTranslationsService = serviceProvider.GetRequiredService<FrontendApiTranslationsService>();
+            var umbracoLocalizationServiceTranslationsService = serviceProvider.GetRequiredService<CmsTranslationsService>();
+            return new HybridTranslationService(frontendApiTranslationsService, umbracoLocalizationServiceTranslationsService);
+        });
 
         builder.Services.AddUmbracoTranslationsApiClient(builder.Config);
 
@@ -33,7 +51,7 @@ public class Composer : IComposer
             opt.SwaggerDoc(Constants.ApiName, new OpenApiInfo
             {
                 Title = Constants.ApiTitle,
-                Version = Constants.ApiVersion1,
+                Version = Constants.ApiVersion1dot0,
                 Contact = new OpenApiContact
                 {
                     Name = Constants.CharlieTangoAuthors,
