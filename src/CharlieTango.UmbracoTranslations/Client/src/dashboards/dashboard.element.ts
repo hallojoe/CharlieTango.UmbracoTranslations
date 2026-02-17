@@ -3,7 +3,7 @@ import { UmbElementMixin } from '@umbraco-cms/backoffice/element-api';
 import { tryExecute } from '@umbraco-cms/backoffice/resources';
 import { CharlieTangoUmbracoTranslationsService } from '../api/sdk.gen.ts';
 
-type DictionaryResponse = Record<string, Record<string, string>>;
+type DictionaryResponse = Record<string, Record<string, string | null>>;
 
 type DictionaryRow = {
   key: string;
@@ -183,48 +183,45 @@ export class ExampleDashboardElement extends UmbElementMixin(LitElement) {
     const rowId = this._getRowId(row);
     const drafts = this._draftById[rowId] ?? {};
 
+    const normalizedByLanguage: Record<string, string> = {};
     for (const language of this._languages) {
-      const value = (drafts[language] ?? '').trim();
-      if (!value) {
-        this._rowErrorsById = {
-          ...this._rowErrorsById,
-          [rowId]: `Value is required for ${language}.`,
-        };
-        return;
-      }
+      normalizedByLanguage[language] = (drafts[language] ?? '').trim();
     }
 
     this._savingById = { ...this._savingById, [rowId]: true };
     this._rowErrorsById = { ...this._rowErrorsById, [rowId]: undefined };
 
-    for (const language of this._languages) {
-      const result = await tryExecute(
-        this,
-        CharlieTangoUmbracoTranslationsService.saveDictionaryItem({
-          body: {
-            key: row.key,
-            culture: language,
-            value: (drafts[language] ?? '').trim(),
-          },
-        })
-      );
+    const result = await tryExecute(
+      this,
+      CharlieTangoUmbracoTranslationsService.saveDictionaryItemAlternative({
+        body: {
+          key: row.key,
+          translations: normalizedByLanguage,
+        },
+      })
+    );
 
-      if (!result.data) {
-        this._rowErrorsById = {
-          ...this._rowErrorsById,
-          [rowId]: result.error?.message ?? 'Failed to save dictionary item.',
-        };
-        this._savingById = { ...this._savingById, [rowId]: false };
-        return;
-      }
+    if (!result.data) {
+      this._rowErrorsById = {
+        ...this._rowErrorsById,
+        [rowId]: result.error?.message ?? 'Failed to save dictionary item.',
+      };
+      this._savingById = { ...this._savingById, [rowId]: false };
+      return;
     }
 
     const updatedUmbracoData = { ...this._umbracoData };
     for (const language of this._languages) {
-      updatedUmbracoData[language] = {
-        ...(updatedUmbracoData[language] ?? {}),
-        [row.key]: (drafts[language] ?? '').trim(),
-      };
+      const current = { ...(updatedUmbracoData[language] ?? {}) };
+      const normalizedValue = normalizedByLanguage[language];
+
+      if (!normalizedValue) {
+        delete current[row.key];
+      } else {
+        current[row.key] = normalizedValue;
+      }
+
+      updatedUmbracoData[language] = current;
     }
     this._umbracoData = updatedUmbracoData;
 
@@ -284,7 +281,7 @@ export class ExampleDashboardElement extends UmbElementMixin(LitElement) {
                 <table>
                   <thead>
                     <tr>
-                      <th>Frontend Value</th>
+                      <th>Key</th>
                       ${this._languages.map(
                         (language) => html`<th>Umbraco ${language}</th>`
                       )}
@@ -307,7 +304,7 @@ export class ExampleDashboardElement extends UmbElementMixin(LitElement) {
 
                         return html`
                           <tr>
-                            <td title=${row.key}>${row.frontendValue}</td>
+                            <td title=${row.key}>${row.key}</td>
                             ${this._languages.map((language) => {
                               const umbracoValueMissing = this._isMissingUmbracoValue(row.key, language);
                               const umbracoValue = this._getUmbracoValue(row.key, language);
@@ -361,7 +358,7 @@ export class ExampleDashboardElement extends UmbElementMixin(LitElement) {
                                             look="primary"
                                             @click=${() => this._startOverride(row)}
                                           >
-                                            Override
+                                            <uui-icon name="add"></uui-icon>
                                           </uui-button>
                                         `
                                       : null}
@@ -371,7 +368,7 @@ export class ExampleDashboardElement extends UmbElementMixin(LitElement) {
                                             look="primary"
                                             @click=${() => this._startEdit(row)}
                                           >
-                                            Edit
+                                            <uui-icon name="edit"></uui-icon>
                                           </uui-button>
                                         `
                                       : null}

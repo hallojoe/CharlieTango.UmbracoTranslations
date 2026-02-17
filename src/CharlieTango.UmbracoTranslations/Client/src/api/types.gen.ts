@@ -4,6 +4,19 @@ export type ClientOptions = {
     baseUrl: 'https://localhost:44313' | (string & {});
 };
 
+export type AlternativeSaveDictionaryItemRequest = {
+    key: string;
+    translations: {
+        [key: string]: string | null;
+    };
+};
+
+export type DeleteDictionaryItemResponse = {
+    key: string;
+    culture: string;
+    deleted: boolean;
+};
+
 export type EventMessageTypeModel = 'Default' | 'Info' | 'Error' | 'Success' | 'Warning';
 
 export type NotificationHeaderModel = {
@@ -45,6 +58,36 @@ export type GetFromUmbracoResponses = {
     200: unknown;
 };
 
+export type DeleteDictionaryItemData = {
+    body?: never;
+    path?: never;
+    query?: {
+        key?: string;
+        culture?: string;
+    };
+    url: '/umbraco/umbracotranslations/api/v1/dictionary';
+};
+
+export type DeleteDictionaryItemErrors = {
+    /**
+     * Bad Request
+     */
+    400: unknown;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type DeleteDictionaryItemResponses = {
+    /**
+     * OK
+     */
+    200: DeleteDictionaryItemResponse;
+};
+
+export type DeleteDictionaryItemResponse2 = DeleteDictionaryItemResponses[keyof DeleteDictionaryItemResponses];
+
 export type SaveDictionaryItemData = {
     body?: SaveDictionaryItemRequest;
     path?: never;
@@ -71,6 +114,33 @@ export type SaveDictionaryItemResponses = {
 };
 
 export type SaveDictionaryItemResponse2 = SaveDictionaryItemResponses[keyof SaveDictionaryItemResponses];
+
+export type SaveDictionaryItemAlternativeData = {
+    body?: AlternativeSaveDictionaryItemRequest;
+    path?: never;
+    query?: never;
+    url: '/umbraco/umbracotranslations/api/v1/dictionary/alternative';
+};
+
+export type SaveDictionaryItemAlternativeErrors = {
+    /**
+     * Bad Request
+     */
+    400: unknown;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+};
+
+export type SaveDictionaryItemAlternativeResponses = {
+    /**
+     * OK
+     */
+    200: SaveDictionaryItemResponse;
+};
+
+export type SaveDictionaryItemAlternativeResponse = SaveDictionaryItemAlternativeResponses[keyof SaveDictionaryItemAlternativeResponses];
 
 export type GetFromFrontendData = {
     body?: never;

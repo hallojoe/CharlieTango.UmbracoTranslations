@@ -7,7 +7,7 @@ public sealed class CmsTranslationsService(ILocalizationService localizationServ
 #pragma warning restore CS0618 // Type or member is obsolete, but we need to use it anyway because umbraco does not provide alternative.
     : IStringTranslationsService
 {
-    public Task<Dictionary<string, Dictionary<string, string>>> GetManyAsync(CancellationToken cancellationToken = default)
+    public Task<Dictionary<string, Dictionary<string, string?>>> GetManyAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -15,7 +15,7 @@ public sealed class CmsTranslationsService(ILocalizationService localizationServ
         var dictionaryItemDescendants = localizationService.GetDictionaryItemDescendants(parentId: null);
 #pragma warning restore CS0618 // Type or member is obsolete, but we need to use it anyway because umbraco does not provide alternative.
 
-        var result = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
+        var result = new Dictionary<string, Dictionary<string, string?>>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var dictionaryItem in dictionaryItemDescendants)
         {
@@ -34,7 +34,7 @@ public sealed class CmsTranslationsService(ILocalizationService localizationServ
 
                 if (!result.TryGetValue(culture, out var cultureDictionary))
                 {
-                    cultureDictionary = new Dictionary<string, string>(StringComparer.Ordinal);
+                    cultureDictionary = new Dictionary<string, string?>(StringComparer.Ordinal);
                     result[culture] = cultureDictionary;
                 }
 
@@ -46,7 +46,7 @@ public sealed class CmsTranslationsService(ILocalizationService localizationServ
         return Task.FromResult(result);
     }
 
-    public Task<Dictionary<string, string>> GetManyAsync(string culture, CancellationToken cancellationToken = default)
+    public Task<Dictionary<string, string?>> GetManyAsync(string culture, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(culture))
         {
@@ -58,7 +58,7 @@ public sealed class CmsTranslationsService(ILocalizationService localizationServ
 #pragma warning disable CS0618 // Type or member is obsolete, but we need to use it anyway because Umbraco does not provide alternative.
         var dictionaryItemDescendants = localizationService.GetDictionaryItemDescendants(parentId: null);
 #pragma warning restore CS0618 // Type or member is obsolete, but we need to use it anyway because Umbraco does not provide alternative.
-        var result = new Dictionary<string, string>(StringComparer.Ordinal);
+        var result = new Dictionary<string, string?>(StringComparer.Ordinal);
 
         foreach (var dictionaryItem in dictionaryItemDescendants)
         {
@@ -78,7 +78,7 @@ public sealed class CmsTranslationsService(ILocalizationService localizationServ
         return Task.FromResult(result);
     }
 
-    public Task<string> GetAsync(string key, string culture, CancellationToken cancellationToken = default)
+    public Task<string?> GetAsync(string key, string culture, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(key))
         {
@@ -98,17 +98,12 @@ public sealed class CmsTranslationsService(ILocalizationService localizationServ
 
         if (dictionaryItem is null)
         {
-            throw new KeyNotFoundException($"No Umbraco dictionary item exists with key '{key}'.");
+            return Task.FromResult<string?>(null);
         }
 
         var dictionaryTranslation = (dictionaryItem.Translations)
             .FirstOrDefault(x => string.Equals(x.LanguageIsoCode, culture, StringComparison.OrdinalIgnoreCase));
 
-        if (dictionaryTranslation is null)
-        {
-            throw new KeyNotFoundException($"No Umbraco dictionary translation exists for key '{key}' and culture '{culture}'.");
-        }
-
-        return Task.FromResult(dictionaryTranslation.Value);
+        return Task.FromResult(dictionaryTranslation?.Value);
     }
 }

@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetFromFrontendData, GetFromFrontendErrors, GetFromFrontendResponses, GetFromHybridData, GetFromHybridErrors, GetFromHybridResponses, GetFromUmbracoData, GetFromUmbracoErrors, GetFromUmbracoResponses, GetLanguagesData, GetLanguagesErrors, GetLanguagesResponses, SaveDictionaryItemData, SaveDictionaryItemErrors, SaveDictionaryItemResponses } from './types.gen';
+import type { DeleteDictionaryItemData, DeleteDictionaryItemErrors, DeleteDictionaryItemResponses, GetFromFrontendData, GetFromFrontendErrors, GetFromFrontendResponses, GetFromHybridData, GetFromHybridErrors, GetFromHybridResponses, GetFromUmbracoData, GetFromUmbracoErrors, GetFromUmbracoResponses, GetLanguagesData, GetLanguagesErrors, GetLanguagesResponses, SaveDictionaryItemAlternativeData, SaveDictionaryItemAlternativeErrors, SaveDictionaryItemAlternativeResponses, SaveDictionaryItemData, SaveDictionaryItemErrors, SaveDictionaryItemResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -32,6 +32,19 @@ export class CharlieTangoUmbracoTranslationsService {
         });
     }
     
+    public static deleteDictionaryItem<ThrowOnError extends boolean = false>(options?: Options<DeleteDictionaryItemData, ThrowOnError>) {
+        return (options?.client ?? client).delete<DeleteDictionaryItemResponses, DeleteDictionaryItemErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/umbracotranslations/api/v1/dictionary',
+            ...options
+        });
+    }
+    
     public static saveDictionaryItem<ThrowOnError extends boolean = false>(options?: Options<SaveDictionaryItemData, ThrowOnError>) {
         return (options?.client ?? client).post<SaveDictionaryItemResponses, SaveDictionaryItemErrors, ThrowOnError>({
             security: [
@@ -41,6 +54,23 @@ export class CharlieTangoUmbracoTranslationsService {
                 }
             ],
             url: '/umbraco/umbracotranslations/api/v1/dictionary',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options?.headers
+            }
+        });
+    }
+    
+    public static saveDictionaryItemAlternative<ThrowOnError extends boolean = false>(options?: Options<SaveDictionaryItemAlternativeData, ThrowOnError>) {
+        return (options?.client ?? client).post<SaveDictionaryItemAlternativeResponses, SaveDictionaryItemAlternativeErrors, ThrowOnError>({
+            security: [
+                {
+                    scheme: 'bearer',
+                    type: 'http'
+                }
+            ],
+            url: '/umbraco/umbracotranslations/api/v1/dictionary/alternative',
             ...options,
             headers: {
                 'Content-Type': 'application/json',

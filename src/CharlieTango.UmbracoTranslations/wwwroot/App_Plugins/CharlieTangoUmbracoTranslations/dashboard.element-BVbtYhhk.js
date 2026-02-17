@@ -1,10 +1,10 @@
-import { LitElement as I, html as s, css as B, state as h, customElement as w } from "@umbraco-cms/backoffice/external/lit";
-import { UmbElementMixin as E } from "@umbraco-cms/backoffice/element-api";
-import { tryExecute as y } from "@umbraco-cms/backoffice/resources";
-import { c as _ } from "./client.gen-Y78mL-dz.js";
-class p {
+import { LitElement as I, html as s, css as B, state as c, customElement as w } from "@umbraco-cms/backoffice/external/lit";
+import { UmbElementMixin as k } from "@umbraco-cms/backoffice/element-api";
+import { tryExecute as b } from "@umbraco-cms/backoffice/resources";
+import { c as g } from "./client.gen-Y78mL-dz.js";
+class f {
   static getFromUmbraco(t) {
-    return (t?.client ?? _).get({
+    return (t?.client ?? g).get({
       security: [
         {
           scheme: "bearer",
@@ -15,8 +15,20 @@ class p {
       ...t
     });
   }
+  static deleteDictionaryItem(t) {
+    return (t?.client ?? g).delete({
+      security: [
+        {
+          scheme: "bearer",
+          type: "http"
+        }
+      ],
+      url: "/umbraco/umbracotranslations/api/v1/dictionary",
+      ...t
+    });
+  }
   static saveDictionaryItem(t) {
-    return (t?.client ?? _).post({
+    return (t?.client ?? g).post({
       security: [
         {
           scheme: "bearer",
@@ -31,8 +43,24 @@ class p {
       }
     });
   }
+  static saveDictionaryItemAlternative(t) {
+    return (t?.client ?? g).post({
+      security: [
+        {
+          scheme: "bearer",
+          type: "http"
+        }
+      ],
+      url: "/umbraco/umbracotranslations/api/v1/dictionary/alternative",
+      ...t,
+      headers: {
+        "Content-Type": "application/json",
+        ...t?.headers
+      }
+    });
+  }
   static getFromFrontend(t) {
-    return (t?.client ?? _).get({
+    return (t?.client ?? g).get({
       security: [
         {
           scheme: "bearer",
@@ -44,7 +72,7 @@ class p {
     });
   }
   static getFromHybrid(t) {
-    return (t?.client ?? _).get({
+    return (t?.client ?? g).get({
       security: [
         {
           scheme: "bearer",
@@ -56,7 +84,7 @@ class p {
     });
   }
   static getLanguages(t) {
-    return (t?.client ?? _).get({
+    return (t?.client ?? g).get({
       security: [
         {
           scheme: "bearer",
@@ -68,12 +96,12 @@ class p {
     });
   }
 }
-var $ = Object.defineProperty, k = Object.getOwnPropertyDescriptor, c = (e, t, r, a) => {
-  for (var i = a > 1 ? void 0 : a ? k(t, r) : t, o = e.length - 1, d; o >= 0; o--)
-    (d = e[o]) && (i = (a ? d(t, r, i) : d(i)) || i);
+var $ = Object.defineProperty, x = Object.getOwnPropertyDescriptor, l = (e, t, r, a) => {
+  for (var i = a > 1 ? void 0 : a ? x(t, r) : t, o = e.length - 1, n; o >= 0; o--)
+    (n = e[o]) && (i = (a ? n(t, r, i) : n(i)) || i);
   return a && i && $(t, r, i), i;
 };
-let n = class extends E(I) {
+let d = class extends k(I) {
   constructor() {
     super(...arguments), this._rows = [], this._languages = [], this._frontendData = {}, this._umbracoData = {}, this._editingById = {}, this._draftById = {}, this._savingById = {}, this._rowErrorsById = {}, this._loading = !1, this._filterText = "";
   }
@@ -83,9 +111,9 @@ let n = class extends E(I) {
   async _load() {
     this._loading = !0, this._error = void 0;
     const [e, t, r] = await Promise.all([
-      y(this, p.getLanguages()),
-      y(this, p.getFromFrontend()),
-      y(this, p.getFromUmbraco())
+      b(this, f.getLanguages()),
+      b(this, f.getFromFrontend()),
+      b(this, f.getFromUmbraco())
     ]);
     if (!e.data) {
       this._loading = !1, this._error = e.error?.message ?? "Failed to load languages.";
@@ -149,57 +177,47 @@ let n = class extends E(I) {
     delete i[t], this._rowErrorsById = i;
   }
   _onDraftChange(e, t, r) {
-    const i = r.target?.value ?? "", o = this._getRowId(e), d = this._draftById[o] ?? {};
+    const i = r.target?.value ?? "", o = this._getRowId(e), n = this._draftById[o] ?? {};
     this._draftById = {
       ...this._draftById,
-      [o]: { ...d, [t]: i }
+      [o]: { ...n, [t]: i }
     };
   }
   async _saveOverride(e) {
-    const t = this._getRowId(e), r = this._draftById[t] ?? {};
-    for (const l of this._languages)
-      if (!(r[l] ?? "").trim()) {
-        this._rowErrorsById = {
-          ...this._rowErrorsById,
-          [t]: `Value is required for ${l}.`
-        };
-        return;
-      }
+    const t = this._getRowId(e), r = this._draftById[t] ?? {}, a = {};
+    for (const h of this._languages)
+      a[h] = (r[h] ?? "").trim();
     this._savingById = { ...this._savingById, [t]: !0 }, this._rowErrorsById = { ...this._rowErrorsById, [t]: void 0 };
-    for (const l of this._languages) {
-      const u = await y(
-        this,
-        p.saveDictionaryItem({
-          body: {
-            key: e.key,
-            culture: l,
-            value: (r[l] ?? "").trim()
-          }
-        })
-      );
-      if (!u.data) {
-        this._rowErrorsById = {
-          ...this._rowErrorsById,
-          [t]: u.error?.message ?? "Failed to save dictionary item."
-        }, this._savingById = { ...this._savingById, [t]: !1 };
-        return;
-      }
+    const i = await b(
+      this,
+      f.saveDictionaryItemAlternative({
+        body: {
+          key: e.key,
+          translations: a
+        }
+      })
+    );
+    if (!i.data) {
+      this._rowErrorsById = {
+        ...this._rowErrorsById,
+        [t]: i.error?.message ?? "Failed to save dictionary item."
+      }, this._savingById = { ...this._savingById, [t]: !1 };
+      return;
     }
-    const a = { ...this._umbracoData };
-    for (const l of this._languages)
-      a[l] = {
-        ...a[l] ?? {},
-        [e.key]: (r[l] ?? "").trim()
-      };
-    this._umbracoData = a;
-    const i = { ...this._editingById };
-    delete i[t], this._editingById = i;
-    const o = { ...this._savingById };
-    delete o[t], this._savingById = o;
-    const d = { ...this._draftById };
-    delete d[t], this._draftById = d;
-    const g = { ...this._rowErrorsById };
-    delete g[t], this._rowErrorsById = g;
+    const o = { ...this._umbracoData };
+    for (const h of this._languages) {
+      const _ = { ...o[h] ?? {} }, m = a[h];
+      m ? _[e.key] = m : delete _[e.key], o[h] = _;
+    }
+    this._umbracoData = o;
+    const n = { ...this._editingById };
+    delete n[t], this._editingById = n;
+    const y = { ...this._savingById };
+    delete y[t], this._savingById = y;
+    const p = { ...this._draftById };
+    delete p[t], this._draftById = p;
+    const u = { ...this._rowErrorsById };
+    delete u[t], this._rowErrorsById = u;
   }
   render() {
     const e = this._filterText.trim().toLowerCase(), t = e ? this._rows.filter(
@@ -232,7 +250,7 @@ let n = class extends E(I) {
                 <table>
                   <thead>
                     <tr>
-                      <th>Frontend Value</th>
+                      <th>Key</th>
                       ${this._languages.map(
       (r) => s`<th>Umbraco ${r}</th>`
     )}
@@ -242,16 +260,16 @@ let n = class extends E(I) {
                   <tbody>
                     ${t.map(
       (r) => {
-        const a = this._getRowId(r), i = !!this._editingById[a], o = !!this._savingById[a], d = this._rowErrorsById[a], g = this._languages.some(
+        const a = this._getRowId(r), i = !!this._editingById[a], o = !!this._savingById[a], n = this._rowErrorsById[a], y = this._languages.some(
           (u) => this._isMissingUmbracoValue(r.key, u)
-        ), l = this._languages.some(
+        ), p = this._languages.some(
           (u) => !this._isMissingUmbracoValue(r.key, u)
         );
         return s`
                           <tr>
-                            <td title=${r.key}>${r.frontendValue}</td>
+                            <td title=${r.key}>${r.key}</td>
                             ${this._languages.map((u) => {
-          const f = this._isMissingUmbracoValue(r.key, u), b = this._getUmbracoValue(r.key, u), m = this._draftById[a]?.[u] ?? "";
+          const h = this._isMissingUmbracoValue(r.key, u), _ = this._getUmbracoValue(r.key, u), m = this._draftById[a]?.[u] ?? "";
           return s`
                                 <td>
                                   ${i ? s`
@@ -263,9 +281,9 @@ let n = class extends E(I) {
                                             @input=${(v) => this._onDraftChange(r, u, v)}
                                           />
                                         </div>
-                                      ` : f ? s`
+                                      ` : h ? s`
                                           <span class="empty">-</span>
-                                        ` : s`${b}`}
+                                        ` : s`${_}`}
                                 </td>
                               `;
         })}
@@ -285,25 +303,25 @@ let n = class extends E(I) {
                                     >
                                       Cancel
                                     </uui-button>
-                                    ${d ? s`<p class="row-error">${d}</p>` : null}
+                                    ${n ? s`<p class="row-error">${n}</p>` : null}
                                   ` : s`
-                                    ${g ? s`
+                                    ${y ? s`
                                           <uui-button
                                             look="primary"
                                             @click=${() => this._startOverride(r)}
                                           >
-                                            Override
+                                            <uui-icon name="wand"></uui-icon>
                                           </uui-button>
                                         ` : null}
-                                    ${!g && l ? s`
+                                    ${!y && p ? s`
                                           <uui-button
                                             look="primary"
                                             @click=${() => this._startEdit(r)}
                                           >
-                                            Edit
+                                            <uui-icon name="edit"></uui-icon>
                                           </uui-button>
                                         ` : null}
-                                    ${d ? s`<p class="row-error">${d}</p>` : null}
+                                    ${n ? s`<p class="row-error">${n}</p>` : null}
                                   `}
                             </td>
                           </tr>
@@ -319,7 +337,7 @@ let n = class extends E(I) {
     `;
   }
 };
-n.styles = [
+d.styles = [
   B`
       :host {
         display: block;
@@ -417,39 +435,39 @@ n.styles = [
       }
     `
 ];
-c([
-  h()
-], n.prototype, "_rows", 2);
-c([
-  h()
-], n.prototype, "_languages", 2);
-c([
-  h()
-], n.prototype, "_editingById", 2);
-c([
-  h()
-], n.prototype, "_draftById", 2);
-c([
-  h()
-], n.prototype, "_savingById", 2);
-c([
-  h()
-], n.prototype, "_rowErrorsById", 2);
-c([
-  h()
-], n.prototype, "_loading", 2);
-c([
-  h()
-], n.prototype, "_error", 2);
-c([
-  h()
-], n.prototype, "_filterText", 2);
-n = c([
+l([
+  c()
+], d.prototype, "_rows", 2);
+l([
+  c()
+], d.prototype, "_languages", 2);
+l([
+  c()
+], d.prototype, "_editingById", 2);
+l([
+  c()
+], d.prototype, "_draftById", 2);
+l([
+  c()
+], d.prototype, "_savingById", 2);
+l([
+  c()
+], d.prototype, "_rowErrorsById", 2);
+l([
+  c()
+], d.prototype, "_loading", 2);
+l([
+  c()
+], d.prototype, "_error", 2);
+l([
+  c()
+], d.prototype, "_filterText", 2);
+d = l([
   w("example-dashboard")
-], n);
-const F = n;
+], d);
+const z = d;
 export {
-  n as ExampleDashboardElement,
-  F as default
+  d as ExampleDashboardElement,
+  z as default
 };
-//# sourceMappingURL=dashboard.element-ZbnDM_Jx.js.map
+//# sourceMappingURL=dashboard.element-BVbtYhhk.js.map

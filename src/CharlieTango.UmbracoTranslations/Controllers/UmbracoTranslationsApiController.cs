@@ -100,5 +100,52 @@ public class SstCmsBackofficeExtensionsDictionaryApiController(
             return BadRequest(exception.Message);
         }
     }
+
+    [HttpPost("dictionary/alternative")]
+    [ProducesResponseType(typeof(SaveDictionaryItemResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> SaveDictionaryItemAlternative(
+        [FromBody] AlternativeSaveDictionaryItemRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await cmsDictionaryService.SaveManyAsync(request, cancellationToken);
+            return Ok(response);
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(exception.Message);
+        }
+        catch (InvalidOperationException exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+
+    [HttpDelete("dictionary")]
+    [ProducesResponseType(typeof(DeleteDictionaryItemResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> DeleteDictionaryItem(
+        [FromQuery] string key,
+        [FromQuery] string culture,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await cmsDictionaryService.DeleteAsync(
+                new DeleteDictionaryItemRequest(key, culture),
+                cancellationToken);
+            return Ok(response);
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(exception.Message);
+        }
+        catch (InvalidOperationException exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
 }
 
