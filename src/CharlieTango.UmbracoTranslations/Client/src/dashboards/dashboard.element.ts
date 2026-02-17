@@ -24,7 +24,7 @@ export class ExampleDashboardElement extends UmbElementMixin(LitElement) {
   private _defaultLanguage?: string;
 
   @state()
-  private _editingById: Record<string, boolean> = {};
+  private _groupPartCount: 1 | 2 = 1;
 
   @state()
   private _draftById: Record<string, Record<string, string>> = {};
@@ -78,8 +78,7 @@ export class ExampleDashboardElement extends UmbElementMixin(LitElement) {
     this._umbracoData = (umbracoResult.data ?? {}) as DictionaryResponse;
 
     this._rows = this._buildRows();
-    this._editingById = {};
-    this._draftById = {};
+    this._draftById = this._buildDrafts();
     this._savingById = {};
     this._rowErrorsById = {};
     this._loading = false;
@@ -113,13 +112,28 @@ export class ExampleDashboardElement extends UmbElementMixin(LitElement) {
     return rows;
   }
 
+  private _buildDrafts() {
+    const drafts: Record<string, Record<string, string>> = {};
+    for (const row of this._rows) {
+      const rowDrafts: Record<string, string> = {};
+      for (const language of this._languages) {
+        rowDrafts[language] = this._getInitialDraftValue(row.key, language);
+      }
+      drafts[this._getRowId(row)] = rowDrafts;
+    }
+    return drafts;
+  }
+
   private _getRowId(row: DictionaryRow) {
     return row.key;
   }
 
-  private _getGroupKey(key: string) {
-    const dotIndex = key.indexOf('.');
-    return dotIndex === -1 ? key : key.slice(0, dotIndex);
+  private _getGroupKey(key: string, parts: 1 | 2 = this._groupPartCount) {
+    const segments = key.split('.');
+    if (segments.length <= parts) {
+      return key;
+    }
+    return segments.slice(0, parts).join('.');
   }
 
   private _getFrontendValue(key: string, language: string) {
@@ -130,47 +144,45 @@ export class ExampleDashboardElement extends UmbElementMixin(LitElement) {
     return String(this._umbracoData[language]?.[key] ?? '');
   }
 
+  private _getInitialDraftValue(key: string, language: string) {
+    const umbracoValue = this._getUmbracoValue(key, language);
+    if (umbracoValue.trim().length > 0) {
+      return umbracoValue;
+    }
+    return this._getFrontendValue(key, language);
+  }
+
   private _isMissingUmbracoValue(key: string, language: string) {
     const value = this._getUmbracoValue(key, language);
     return value.trim().length === 0;
   }
 
-  private _startOverride(row: DictionaryRow) {
+  private _clearDraft(row: DictionaryRow) {
     const rowId = this._getRowId(row);
-    this._editingById = { ...this._editingById, [rowId]: true };
-    if (!this._draftById[rowId]) {
-      const drafts: Record<string, string> = {};
-      for (const language of this._languages) {
-        drafts[language] = this._getFrontendValue(row.key, language);
-      }
-      this._draftById = { ...this._draftById, [rowId]: drafts };
-    }
-    this._rowErrorsById = { ...this._rowErrorsById, [rowId]: undefined };
-  }
-
-  private _startEdit(row: DictionaryRow) {
-    const rowId = this._getRowId(row);
-    this._editingById = { ...this._editingById, [rowId]: true };
-    const drafts: Record<string, string> = {};
+    const cleared: Record<string, string> = {};
     for (const language of this._languages) {
-      drafts[language] = this._getUmbracoValue(row.key, language);
+      cleared[language] = '';
     }
-    this._draftById = { ...this._draftById, [rowId]: drafts };
+    this._draftById = { ...this._draftById, [rowId]: cleared };
     this._rowErrorsById = { ...this._rowErrorsById, [rowId]: undefined };
   }
-  private _cancelOverride(row: DictionaryRow) {
+
+  private _clearDraftValue(row: DictionaryRow, language: string) {
     const rowId = this._getRowId(row);
-    const updatedEditing = { ...this._editingById };
-    delete updatedEditing[rowId];
-    this._editingById = updatedEditing;
+    const currentDrafts = this._draftById[rowId] ?? {};
+    this._draftById = {
+      ...this._draftById,
+      [rowId]: { ...currentDrafts, [language]: '' },
+    };
+    this._rowErrorsById = { ...this._rowErrorsById, [rowId]: undefined };
+  }
 
-    const updatedDrafts = { ...this._draftById };
-    delete updatedDrafts[rowId];
-    this._draftById = updatedDrafts;
-
-    const updatedErrors = { ...this._rowErrorsById };
-    delete updatedErrors[rowId];
-    this._rowErrorsById = updatedErrors;
+  private _closeDetails(event: Event) {
+    const target = event.currentTarget as HTMLElement | null;
+    const details = target?.closest('details');
+    if (details) {
+      details.open = false;
+    }
   }
 
   private _onDraftChange(row: DictionaryRow, language: string, event: Event) {
@@ -230,17 +242,11 @@ export class ExampleDashboardElement extends UmbElementMixin(LitElement) {
     }
     this._umbracoData = updatedUmbracoData;
 
-    const updatedEditing = { ...this._editingById };
-    delete updatedEditing[rowId];
-    this._editingById = updatedEditing;
-
     const updatedSaving = { ...this._savingById };
     delete updatedSaving[rowId];
     this._savingById = updatedSaving;
 
-    const updatedDrafts = { ...this._draftById };
-    delete updatedDrafts[rowId];
-    this._draftById = updatedDrafts;
+    this._draftById = { ...this._draftById, [rowId]: normalizedByLanguage };
 
     const updatedErrors = { ...this._rowErrorsById };
     delete updatedErrors[rowId];
@@ -268,6 +274,10 @@ export class ExampleDashboardElement extends UmbElementMixin(LitElement) {
       }
     }
 
+    const sortedGroups = Array.from(groupedRows.entries()).sort(([left], [right]) =>
+      left.localeCompare(right)
+    );
+
     return html`
       <uui-box headline="Dictionary Items">
         <div class="table-actions">
@@ -282,10 +292,23 @@ export class ExampleDashboardElement extends UmbElementMixin(LitElement) {
             }}
           />
           <uui-button
+            look="secondary"
+            label="Group by"
+            aria-pressed=${this._groupPartCount === 2}
+            @click=${() => {
+              this._groupPartCount = this._groupPartCount === 1 ? 2 : 1;
+            }}
+          >
+            ${this._groupPartCount === 1 ? 'Group: 1-part' : 'Group: 2-part'}
+          </uui-button>
+          <uui-button
+            class="refresh-button"
             look="primary"
+            label="Refresh"
             ?disabled=${this._loading}
             @click=${() => this._load()}
           >
+            <uui-icon name="sync"></uui-icon>
             ${this._loading ? 'Loading...' : 'Refresh'}
           </uui-button>
         </div>
@@ -296,114 +319,110 @@ export class ExampleDashboardElement extends UmbElementMixin(LitElement) {
               ${groupedRows.size === 0
                 ? html`<p class="empty">No items match the current filter.</p>`
                 : html`
-                    ${Array.from(groupedRows.entries()).map(([groupKey, groupRows]) => html`
-                      <div class="group-block">
-                        <div class="group-title">${groupKey}</div>
-                        <div class="table-wrapper">
-                          <table>
-                            <thead>
-                              <tr>
-                                <th>Key</th>
-                                ${this._languages.map(
-                                  (language) => html`<th>Umbraco ${language}</th>`
-                                )}
-                                <th class="override-actions">Actions</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              ${groupRows.map((row) => {
-                                const rowId = this._getRowId(row);
-                                const isEditing = Boolean(this._editingById[rowId]);
-                                const isSaving = Boolean(this._savingById[rowId]);
-                                const rowError = this._rowErrorsById[rowId];
-                                const hasMissingUmbraco = this._languages.some((language) =>
-                                  this._isMissingUmbracoValue(row.key, language)
-                                );
-                                const hasAnyUmbracoValue = this._languages.some((language) =>
-                                  !this._isMissingUmbracoValue(row.key, language)
-                                );
+                    <div class="list">
+                      ${sortedGroups.map(([groupKey, groupRows]) => html`
+                        <details class="group-details" open>
+                          <summary class="group-summary">
+                            <span class="twisty" aria-hidden="true">▸</span>
+                            <span class="group-title">${groupKey}</span>
+                            <span class="meta">${groupRows.length} keys</span>
+                          </summary>
 
-                                return html`
-                                  <tr>
-                                    <td title=${row.key}>${row.key}</td>
-                                    ${this._languages.map((language) => {
-                                      const umbracoValueMissing = this._isMissingUmbracoValue(row.key, language);
-                                      const umbracoValue = this._getUmbracoValue(row.key, language);
-                                      const draftValue = this._draftById[rowId]?.[language] ?? '';
+                          <div class="group-content">
+                            ${groupRows.map((row) => {
+                              const rowId = this._getRowId(row);
+                              const isSaving = Boolean(this._savingById[rowId]);
+                              const rowError = this._rowErrorsById[rowId];
+                              const completed = this._languages.filter(
+                                (language) => !this._isMissingUmbracoValue(row.key, language)
+                              ).length;
 
-                                      return html`
-                                        <td>
-                                          ${isEditing
-                                            ? html`
-                                                <div class="override-row">
-                                                  <input
-                                                    type="text"
-                                                    .value=${draftValue}
-                                                    ?disabled=${isSaving}
-                                                    @input=${(event: Event) =>
-                                                      this._onDraftChange(row, language, event)}
-                                                  />
-                                                </div>
-                                              `
-                                            : umbracoValueMissing
-                                              ? html`
-                                                  <span class="empty">-</span>
-                                                `
-                                              : html`${umbracoValue}`}
-                                        </td>
-                                      `;
-                                    })}
-                                    <td>
-                                      ${isEditing
-                                        ? html`
-                                            <uui-button
-                                              look="primary"
-                                              ?disabled=${isSaving}
-                                              @click=${() => this._saveOverride(row)}
-                                            >
-                                              ${isSaving ? 'Saving...' : 'Save'}
-                                            </uui-button>
-                                            <uui-button
-                                              look="secondary"
-                                              ?disabled=${isSaving}
-                                              @click=${() => this._cancelOverride(row)}
-                                            >
-                                              Cancel
-                                            </uui-button>
-                                            ${rowError ? html`<p class="row-error">${rowError}</p>` : null}
-                                          `
-                                        : html`
-                                            ${hasMissingUmbraco
-                                              ? html`
-                                                  <uui-button
-                                                    look="primary"
-                                                    @click=${() => this._startOverride(row)}
-                                                  >
-                                                    <uui-icon name="add"></uui-icon>
-                                                  </uui-button>
-                                                `
-                                              : null}
-                                            ${!hasMissingUmbraco && hasAnyUmbracoValue
-                                              ? html`
-                                                  <uui-button
-                                                    look="primary"
-                                                    @click=${() => this._startEdit(row)}
-                                                  >
-                                                    <uui-icon name="edit"></uui-icon>
-                                                  </uui-button>
-                                                `
-                                              : null}
-                                            ${rowError ? html`<p class="row-error">${rowError}</p>` : null}
-                                          `}
-                                    </td>
-                                  </tr>
-                                `;
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    `)}
+                              return html`
+                                <details class="key-details">
+                                  <summary class="key-summary">
+                                    <span class="twisty" aria-hidden="true">▸</span>
+                                    <span class="key-title" title=${row.key}>${row.key}</span>
+                                    <span class="meta">
+                                      <span
+                                        class="progress"
+                                        title="${completed} of ${this._languages.length} translations has been overridden."
+                                      >
+                                        ${completed}/${this._languages.length}
+                                      </span>
+                                    </span>
+                                  </summary>
+
+                                  <div class="key-content">
+                                    <div class="translations">
+                                      ${this._languages.map((language) => {
+                                        const draftValue =
+                                          this._draftById[rowId]?.[language] ??
+                                          this._getInitialDraftValue(row.key, language);
+
+                                        return html`
+                                          <div class="lang-row">
+                                            <div class="lang">
+                                              <strong>${language}</strong>
+                                              <span>Umbraco</span>
+                                            </div>
+                                            <div class="value">
+                                              <div class="value-controls">
+                                                <input
+                                                  type="text"
+                                                  .value=${draftValue}
+                                                  ?disabled=${isSaving}
+                                                  @input=${(event: Event) =>
+                                                    this._onDraftChange(row, language, event)}
+                                                />
+                                                <uui-button
+                                                  look="secondary"
+                                                  label="Clear"
+                                                  ?disabled=${isSaving}
+                                                  @click=${() => this._clearDraftValue(row, language)}
+                                                >
+                                                  Clear
+                                                </uui-button>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        `;
+                                      })}
+                                    </div>
+                                    <div class="actions">
+                                      <uui-button
+                                        look="primary"
+                                        label="Save"
+                                        ?disabled=${isSaving}
+                                        @click=${() => this._saveOverride(row)}
+                                      >
+                                        ${isSaving ? 'Saving...' : 'Save'}
+                                      </uui-button>
+                                      <uui-button
+                                        look="secondary"
+                                        label="Cancel"
+                                        ?disabled=${isSaving}
+                                        @click=${(event: Event) => this._closeDetails(event)}
+                                      >
+                                        Cancel
+                                      </uui-button>
+                                      <uui-button
+                                        look="secondary"
+                                        label="Clear all"
+                                        ?disabled=${isSaving}
+                                        @click=${() => this._clearDraft(row)}
+                                      >
+                                        Clear all
+                                      </uui-button>
+                                    </div>
+                                    ${rowError ? html`<p class="row-error">${rowError}</p>` : null}
+                                  </div>
+                                </details>
+                              `;
+                            })}
+                          </div>
+                        </details>
+                      `)}
+                    </div>
                   `}
             `}
       </uui-box>
@@ -420,8 +439,12 @@ export class ExampleDashboardElement extends UmbElementMixin(LitElement) {
       .table-actions {
         display: flex;
         gap: var(--uui-size-2);
-        justify-content: flex-end;
+        justify-content: flex-start;
         margin-bottom: var(--uui-size-2);
+      }
+
+      .refresh-button {
+        margin-left: auto;
       }
 
       .filter-input {
@@ -434,48 +457,153 @@ export class ExampleDashboardElement extends UmbElementMixin(LitElement) {
         font: inherit;
       }
 
-      .table-wrapper {
-        overflow: auto;
+      .list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--uui-size-2);
+      }
+
+      details {
         border: 1px solid var(--uui-color-border);
         border-radius: var(--uui-border-radius);
-      }
-
-      table {
-        width: 100%;
-        border-collapse: collapse;
         background: var(--uui-color-surface);
-        table-layout: fixed;
       }
 
-      thead {
-        background: var(--uui-color-surface-alt);
-      }
-
-      th,
-      td {
-        text-align: left;
+      summary {
+        list-style: none;
+        cursor: pointer;
         padding: var(--uui-size-2) var(--uui-size-3);
-        border-bottom: 1px solid var(--uui-color-border);
-        white-space: normal;
-        word-break: break-word;
-        overflow-wrap: anywhere;
-        vertical-align: top;
-        max-width: 280px;
-      }
-
-      td {
-        font-family: var(--uui-font-family);
-      }
-
-      .override-row {
         display: flex;
         align-items: center;
         gap: var(--uui-size-2);
-        flex-wrap: wrap;
       }
 
-      .override-row input {
-        min-width: 220px;
+      summary::-webkit-details-marker {
+        display: none;
+      }
+
+      details[open] > summary {
+        border-bottom: 1px solid var(--uui-color-border);
+        background: var(--uui-color-surface-alt);
+      }
+
+      .twisty {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        font-size: 12px;
+        border: 1px solid var(--uui-color-border);
+        border-radius: 4px;
+        color: var(--uui-color-text-alt);
+        flex: 0 0 auto;
+        transform: rotate(0deg);
+        transition: transform 120ms ease;
+      }
+
+      details[open] > summary .twisty {
+        transform: rotate(90deg);
+        color: var(--uui-color-text);
+      }
+
+      .group-title {
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+
+      .key-title {
+        font-family: var(--uui-font-family-monospace);
+        font-size: var(--uui-font-size-2);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .meta {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: var(--uui-size-2);
+        color: var(--uui-color-text-alt);
+        font-size: var(--uui-font-size-1);
+      }
+
+      .actions {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--uui-size-1);
+      }
+
+      .group-content {
+        padding: var(--uui-size-2);
+        display: grid;
+        gap: var(--uui-size-2);
+      }
+
+      .key-content {
+        padding: var(--uui-size-2);
+        display: grid;
+        gap: var(--uui-size-2);
+      }
+
+      .translations {
+        border: 1px solid var(--uui-color-border);
+        border-radius: var(--uui-border-radius);
+        background: var(--uui-color-surface-alt);
+        padding: var(--uui-size-2);
+        display: grid;
+        gap: var(--uui-size-1);
+      }
+
+      .lang-row {
+        display: grid;
+        grid-template-columns: 160px 1fr;
+        gap: var(--uui-size-2);
+        align-items: center;
+        padding: var(--uui-size-1) 0;
+        border-top: 1px solid var(--uui-color-border);
+      }
+
+      .lang-row:first-child {
+        border-top: none;
+        padding-top: 0;
+      }
+
+      .lang {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+
+      .lang strong {
+        font-size: var(--uui-font-size-2);
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .lang span {
+        font-size: var(--uui-font-size-1);
+        color: var(--uui-color-text-alt);
+      }
+
+      .value {
+        min-width: 0;
+      }
+
+      .value-controls {
+        display: flex;
+        align-items: center;
+        gap: var(--uui-size-1);
+      }
+
+      .value input {
+        flex: 1 1 auto;
+        width: 100%;
+        box-sizing: border-box;
         padding: var(--uui-size-1) var(--uui-size-2);
         border-radius: var(--uui-border-radius);
         border: 1px solid var(--uui-color-border);
@@ -485,29 +613,9 @@ export class ExampleDashboardElement extends UmbElementMixin(LitElement) {
       }
 
       .row-error {
-        margin: var(--uui-size-1) 0 0;
+        margin: 0;
         color: var(--uui-color-danger);
         font-size: var(--uui-font-size-1);
-      }
-
-      .override-actions {
-        width: 160px;
-      }
-
-      .group-block {
-        display: flex;
-        flex-direction: column;
-        gap: var(--uui-size-2);
-        margin-bottom: var(--uui-size-4);
-      }
-
-      .group-title {
-        font-weight: 600;
-        letter-spacing: 0.02em;
-      }
-
-      tbody tr:hover {
-        background: var(--uui-color-surface-alt);
       }
 
       .error {
