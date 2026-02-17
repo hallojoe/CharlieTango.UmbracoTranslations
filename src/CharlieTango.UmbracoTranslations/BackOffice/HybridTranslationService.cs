@@ -1,19 +1,19 @@
 namespace CharlieTango.UmbracoTranslations.BackOffice;
 
 public sealed class HybridTranslationService(
-    IStringTranslationsService translationsServiceOne,
-    IStringTranslationsService translationsServiceTwo) : IStringTranslationsService
+    IFrontendTranslationsService translationsServiceOne,
+    ICmsTranslationsService translationsServiceTwo) : ITranslationsService
 {
-    private readonly IStringTranslationsService _left = translationsServiceOne
+    private readonly ITranslationsService _left = translationsServiceOne
         ?? throw new ArgumentNullException(nameof(translationsServiceOne));
 
-    private readonly IStringTranslationsService _right = translationsServiceTwo
+    private readonly ITranslationsService _right = translationsServiceTwo
         ?? throw new ArgumentNullException(nameof(translationsServiceTwo));
 
     // Fetch from both, then merge with RIGHT overriding LEFT on conflicts.
     // (So pass Frontend API as the left, Umbraco as the right if you want Umbraco to win.)
 
-    public async Task<Dictionary<string, Dictionary<string, string>>> GetManyAsync(CancellationToken cancellationToken = default)
+    public async Task<Dictionary<string, Dictionary<string, string?>>> GetManyAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -26,20 +26,20 @@ public sealed class HybridTranslationService(
         var right = await rightTask.ConfigureAwait(false);
 
         // cultures union
-        var result = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
+        var result = new Dictionary<string, Dictionary<string, string?>>(StringComparer.OrdinalIgnoreCase);
 
         MergeIn(left, overwrite: true);   // start with the left
         MergeIn(right, overwrite: true);  // the right overwrites the left
 
         return result;
 
-        void MergeIn(Dictionary<string, Dictionary<string, string>> src, bool overwrite)
+        void MergeIn(Dictionary<string, Dictionary<string, string?>> src, bool overwrite)
         {
             foreach (var (culture, dict) in src)
             {
                 if (!result.TryGetValue(culture, out var target))
                 {
-                    target = new Dictionary<string, string>(StringComparer.Ordinal);
+                    target = new Dictionary<string, string?>(StringComparer.Ordinal);
                     result[culture] = target;
                 }
 
@@ -54,7 +54,7 @@ public sealed class HybridTranslationService(
         }
     }
 
-    public async Task<Dictionary<string, string>> GetManyAsync(string culture, CancellationToken cancellationToken = default)
+    public async Task<Dictionary<string, string?>> GetManyAsync(string culture, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -66,7 +66,7 @@ public sealed class HybridTranslationService(
         var left = await leftTask.ConfigureAwait(false);
         var right = await rightTask.ConfigureAwait(false);
 
-        var result = new Dictionary<string, string>(StringComparer.Ordinal);
+        var result = new Dictionary<string, string?>(StringComparer.Ordinal);
 
         foreach (var (key, value) in left)
         {
@@ -82,19 +82,18 @@ public sealed class HybridTranslationService(
         return result;
     }
 
-    public async Task<string> GetAsync(string key, string culture, CancellationToken cancellationToken = default)
+    public async Task<string?> GetAsync(string key, string culture, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         // Right wins: try right first, then left as fallback.
-        try
+        var rightValue = await _right.GetAsync(key, culture, cancellationToken).ConfigureAwait(false);
+        if (rightValue is not null)
         {
-            return await _right.GetAsync(key, culture, cancellationToken).ConfigureAwait(false);
+            return rightValue;
         }
-        catch (KeyNotFoundException)
-        {
-            return await _left.GetAsync(key, culture, cancellationToken).ConfigureAwait(false);
-        }
+
+        return await _left.GetAsync(key, culture, cancellationToken).ConfigureAwait(false);
     }
 
 }

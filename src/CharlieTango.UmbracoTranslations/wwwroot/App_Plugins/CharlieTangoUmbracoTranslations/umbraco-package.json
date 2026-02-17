@@ -1,0 +1,14 @@
+{
+  "id": "CharlieTango.UmbracoTranslations",
+  "name": "CharlieTango.UmbracoTranslations",
+  "version": "0.0.0",
+  "allowTelemetry": true,
+  "extensions": [
+    {
+      "name": "Charlie Tango Umbraco Translations Bundle",
+      "alias": "CharlieTango.UmbracoTranslations.Bundle",
+      "type": "bundle",
+      "js": "/App_Plugins/CharlieTangoUmbracoTranslations/charlie-tango-umbraco-translations.js"
+    }
+  ]
+}
