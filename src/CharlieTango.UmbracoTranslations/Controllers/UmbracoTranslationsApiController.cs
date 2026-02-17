@@ -10,9 +10,9 @@ namespace CharlieTango.UmbracoTranslations.Controllers;
 [ApiExplorerSettings(GroupName = Constants.ApiGroupName)]
 public class SstCmsBackofficeExtensionsDictionaryApiController(
     ILanguageService languageService,
-    CmsTranslationsService cmsTranslationsService,
-    FrontendApiTranslationsService frontendApiTranslationsService,
-    IStringTranslationsService stringTranslationsService,
+    ICmsTranslationsService cmsTranslationsService,
+    IFrontendTranslationsService frontendApiTranslationsService,
+    ITranslationsService stringTranslationsService,
     ICmsDictionaryService cmsDictionaryService) : UmbracoTranslationsApiControllerBase
 {
     [HttpGet("frontend")]

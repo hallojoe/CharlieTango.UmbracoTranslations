@@ -117,6 +117,11 @@ export class ExampleDashboardElement extends UmbElementMixin(LitElement) {
     return row.key;
   }
 
+  private _getGroupKey(key: string) {
+    const dotIndex = key.indexOf('.');
+    return dotIndex === -1 ? key : key.slice(0, dotIndex);
+  }
+
   private _getFrontendValue(key: string, language: string) {
     return String(this._frontendData[language]?.[key] ?? '');
   }
@@ -252,6 +257,17 @@ export class ExampleDashboardElement extends UmbElementMixin(LitElement) {
         )
       : this._rows;
 
+    const groupedRows = new Map<string, DictionaryRow[]>();
+    for (const row of filteredRows) {
+      const groupKey = this._getGroupKey(row.key);
+      const existing = groupedRows.get(groupKey);
+      if (existing) {
+        existing.push(row);
+      } else {
+        groupedRows.set(groupKey, [row]);
+      }
+    }
+
     return html`
       <uui-box headline="Dictionary Items">
         <div class="table-actions">
@@ -277,114 +293,118 @@ export class ExampleDashboardElement extends UmbElementMixin(LitElement) {
         ${this._error
           ? html`<p class="error">${this._error}</p>`
           : html`
-              <div class="table-wrapper">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Key</th>
-                      ${this._languages.map(
-                        (language) => html`<th>Umbraco ${language}</th>`
-                      )}
-                      <th class="override-actions">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${filteredRows.map(
-                      (row) => {
-                        const rowId = this._getRowId(row);
-                        const isEditing = Boolean(this._editingById[rowId]);
-                        const isSaving = Boolean(this._savingById[rowId]);
-                        const rowError = this._rowErrorsById[rowId];
-                        const hasMissingUmbraco = this._languages.some((language) =>
-                          this._isMissingUmbracoValue(row.key, language)
-                        );
-                        const hasAnyUmbracoValue = this._languages.some((language) =>
-                          !this._isMissingUmbracoValue(row.key, language)
-                        );
-
-                        return html`
-                          <tr>
-                            <td title=${row.key}>${row.key}</td>
-                            ${this._languages.map((language) => {
-                              const umbracoValueMissing = this._isMissingUmbracoValue(row.key, language);
-                              const umbracoValue = this._getUmbracoValue(row.key, language);
-                              const draftValue = this._draftById[rowId]?.[language] ?? '';
-
-                              return html`
-                                <td>
-                                  ${isEditing
-                                    ? html`
-                                        <div class="override-row">
-                                          <input
-                                            type="text"
-                                            .value=${draftValue}
-                                            ?disabled=${isSaving}
-                                            @input=${(event: Event) =>
-                                              this._onDraftChange(row, language, event)}
-                                          />
-                                        </div>
-                                      `
-                                    : umbracoValueMissing
-                                      ? html`
-                                          <span class="empty">-</span>
-                                        `
-                                      : html`${umbracoValue}`}
-                                </td>
-                              `;
-                            })}
-                            <td>
-                              ${isEditing
-                                ? html`
-                                    <uui-button
-                                      look="primary"
-                                      ?disabled=${isSaving}
-                                      @click=${() => this._saveOverride(row)}
-                                    >
-                                      ${isSaving ? 'Saving...' : 'Save'}
-                                    </uui-button>
-                                    <uui-button
-                                      look="secondary"
-                                      ?disabled=${isSaving}
-                                      @click=${() => this._cancelOverride(row)}
-                                    >
-                                      Cancel
-                                    </uui-button>
-                                    ${rowError ? html`<p class="row-error">${rowError}</p>` : null}
-                                  `
-                                : html`
-                                    ${hasMissingUmbraco
-                                      ? html`
-                                          <uui-button
-                                            look="primary"
-                                            @click=${() => this._startOverride(row)}
-                                          >
-                                            <uui-icon name="add"></uui-icon>
-                                          </uui-button>
-                                        `
-                                      : null}
-                                    ${!hasMissingUmbraco && hasAnyUmbracoValue
-                                      ? html`
-                                          <uui-button
-                                            look="primary"
-                                            @click=${() => this._startEdit(row)}
-                                          >
-                                            <uui-icon name="edit"></uui-icon>
-                                          </uui-button>
-                                        `
-                                      : null}
-                                    ${rowError ? html`<p class="row-error">${rowError}</p>` : null}
-                                  `}
-                            </td>
-                          </tr>
-                        `;
-                      }
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              ${filteredRows.length === 0
+              ${groupedRows.size === 0
                 ? html`<p class="empty">No items match the current filter.</p>`
-                : null}
+                : html`
+                    ${Array.from(groupedRows.entries()).map(([groupKey, groupRows]) => html`
+                      <div class="group-block">
+                        <div class="group-title">${groupKey}</div>
+                        <div class="table-wrapper">
+                          <table>
+                            <thead>
+                              <tr>
+                                <th>Key</th>
+                                ${this._languages.map(
+                                  (language) => html`<th>Umbraco ${language}</th>`
+                                )}
+                                <th class="override-actions">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              ${groupRows.map((row) => {
+                                const rowId = this._getRowId(row);
+                                const isEditing = Boolean(this._editingById[rowId]);
+                                const isSaving = Boolean(this._savingById[rowId]);
+                                const rowError = this._rowErrorsById[rowId];
+                                const hasMissingUmbraco = this._languages.some((language) =>
+                                  this._isMissingUmbracoValue(row.key, language)
+                                );
+                                const hasAnyUmbracoValue = this._languages.some((language) =>
+                                  !this._isMissingUmbracoValue(row.key, language)
+                                );
+
+                                return html`
+                                  <tr>
+                                    <td title=${row.key}>${row.key}</td>
+                                    ${this._languages.map((language) => {
+                                      const umbracoValueMissing = this._isMissingUmbracoValue(row.key, language);
+                                      const umbracoValue = this._getUmbracoValue(row.key, language);
+                                      const draftValue = this._draftById[rowId]?.[language] ?? '';
+
+                                      return html`
+                                        <td>
+                                          ${isEditing
+                                            ? html`
+                                                <div class="override-row">
+                                                  <input
+                                                    type="text"
+                                                    .value=${draftValue}
+                                                    ?disabled=${isSaving}
+                                                    @input=${(event: Event) =>
+                                                      this._onDraftChange(row, language, event)}
+                                                  />
+                                                </div>
+                                              `
+                                            : umbracoValueMissing
+                                              ? html`
+                                                  <span class="empty">-</span>
+                                                `
+                                              : html`${umbracoValue}`}
+                                        </td>
+                                      `;
+                                    })}
+                                    <td>
+                                      ${isEditing
+                                        ? html`
+                                            <uui-button
+                                              look="primary"
+                                              ?disabled=${isSaving}
+                                              @click=${() => this._saveOverride(row)}
+                                            >
+                                              ${isSaving ? 'Saving...' : 'Save'}
+                                            </uui-button>
+                                            <uui-button
+                                              look="secondary"
+                                              ?disabled=${isSaving}
+                                              @click=${() => this._cancelOverride(row)}
+                                            >
+                                              Cancel
+                                            </uui-button>
+                                            ${rowError ? html`<p class="row-error">${rowError}</p>` : null}
+                                          `
+                                        : html`
+                                            ${hasMissingUmbraco
+                                              ? html`
+                                                  <uui-button
+                                                    look="primary"
+                                                    @click=${() => this._startOverride(row)}
+                                                  >
+                                                    <uui-icon name="add"></uui-icon>
+                                                  </uui-button>
+                                                `
+                                              : null}
+                                            ${!hasMissingUmbraco && hasAnyUmbracoValue
+                                              ? html`
+                                                  <uui-button
+                                                    look="primary"
+                                                    @click=${() => this._startEdit(row)}
+                                                  >
+                                                    <uui-icon name="edit"></uui-icon>
+                                                  </uui-button>
+                                                `
+                                              : null}
+                                            ${rowError ? html`<p class="row-error">${rowError}</p>` : null}
+                                          `}
+                                    </td>
+                                  </tr>
+                                `;
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    `)}
+                  `}
             `}
       </uui-box>
     `;
@@ -472,6 +492,18 @@ export class ExampleDashboardElement extends UmbElementMixin(LitElement) {
 
       .override-actions {
         width: 160px;
+      }
+
+      .group-block {
+        display: flex;
+        flex-direction: column;
+        gap: var(--uui-size-2);
+        margin-bottom: var(--uui-size-4);
+      }
+
+      .group-title {
+        font-weight: 600;
+        letter-spacing: 0.02em;
       }
 
       tbody tr:hover {

@@ -8,13 +8,13 @@ namespace CharlieTango.UmbracoTranslations.BackOffice;
 /// The returned value is always the LEFT value.
 /// </summary>
 public sealed class DiffTranslationsService(
-    IStringTranslationsService translationsServiceOne,
-    IStringTranslationsService translationsServiceTwo) : IDiffedStringTranslationsService
+    IFrontendTranslationsService translationsServiceOne,
+    ICmsTranslationsService translationsServiceTwo) : IDiffedTranslationsService
 {
-    private readonly IStringTranslationsService _left = translationsServiceOne
+    private readonly ITranslationsService _left = translationsServiceOne
         ?? throw new ArgumentNullException(nameof(translationsServiceOne));
 
-    private readonly IStringTranslationsService _right = translationsServiceTwo
+    private readonly ITranslationsService _right = translationsServiceTwo
         ?? throw new ArgumentNullException(nameof(translationsServiceTwo));
 
     public async Task<Dictionary<string, Dictionary<string, string?>>> GetManyAsync(CancellationToken cancellationToken = default)

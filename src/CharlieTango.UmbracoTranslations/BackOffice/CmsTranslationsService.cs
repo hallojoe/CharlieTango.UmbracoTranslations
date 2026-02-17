@@ -5,7 +5,7 @@ namespace CharlieTango.UmbracoTranslations.BackOffice;
 #pragma warning disable CS0618
 public sealed class CmsTranslationsService(ILocalizationService localizationService)
 #pragma warning restore CS0618 // Type or member is obsolete, but we need to use it anyway because umbraco does not provide alternative.
-    : IStringTranslationsService
+    : ICmsTranslationsService
 {
     public Task<Dictionary<string, Dictionary<string, string?>>> GetManyAsync(CancellationToken cancellationToken = default)
     {

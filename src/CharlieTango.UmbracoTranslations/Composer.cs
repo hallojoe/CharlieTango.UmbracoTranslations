@@ -4,6 +4,7 @@ using CharlieTango.UmbracoTranslations.BackOffice;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -19,22 +20,11 @@ public class Composer : IComposer
     public void Compose(IUmbracoBuilder builder)
     {
         builder.Services.AddUmbracoTranslationsApiClient(builder.Config);
-        builder.Services.AddSingleton<FrontendApiTranslationsService>();
-        builder.Services.AddSingleton<CmsTranslationsService>();
+        builder.Services.TryAddSingleton<IFrontendTranslationsService, FrontendApiTranslationsService>();
+        builder.Services.TryAddSingleton<ICmsTranslationsService, CmsTranslationsService>();
         builder.Services.AddSingleton<ICmsDictionaryService, CmsDictionaryService>();
-        builder.Services.AddSingleton<IDiffedStringTranslationsService, DiffTranslationsService>(serviceProvider =>
-        {
-            var frontendApiTranslationsService = serviceProvider.GetRequiredService<FrontendApiTranslationsService>();
-            var umbracoLocalizationServiceTranslationsService = serviceProvider.GetRequiredService<CmsTranslationsService>();
-            return new DiffTranslationsService(frontendApiTranslationsService, umbracoLocalizationServiceTranslationsService);
-        });
-
-        builder.Services.AddSingleton<IStringTranslationsService, HybridTranslationService>(serviceProvider =>
-        {
-            var frontendApiTranslationsService = serviceProvider.GetRequiredService<FrontendApiTranslationsService>();
-            var umbracoLocalizationServiceTranslationsService = serviceProvider.GetRequiredService<CmsTranslationsService>();
-            return new HybridTranslationService(frontendApiTranslationsService, umbracoLocalizationServiceTranslationsService);
-        });
+        builder.Services.TryAddSingleton<IDiffedTranslationsService, DiffTranslationsService>();
+        builder.Services.TryAddSingleton<ITranslationsService, HybridTranslationService>();
 
         builder.Services.AddUmbracoTranslationsApiClient(builder.Config);
 

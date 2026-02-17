@@ -10,7 +10,7 @@ const a = [
     name: "Charlie Tango Umbraco Translations Dashboard",
     alias: "CharlieTango.UmbracoTranslations.Dashboard",
     type: "dashboard",
-    js: () => import("./dashboard.element-BVbtYhhk.js"),
+    js: () => import("./dashboard.element-CW0quhvZ.js"),
     meta: {
       label: "Example Dashboard",
       pathname: "example-dashboard"

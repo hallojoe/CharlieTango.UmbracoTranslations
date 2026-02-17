@@ -1,13 +1,13 @@
 namespace CharlieTango.UmbracoTranslations.BackOffice;
 
 public sealed class HybridTranslationService(
-    IStringTranslationsService translationsServiceOne,
-    IStringTranslationsService translationsServiceTwo) : IStringTranslationsService
+    IFrontendTranslationsService translationsServiceOne,
+    ICmsTranslationsService translationsServiceTwo) : ITranslationsService
 {
-    private readonly IStringTranslationsService _left = translationsServiceOne
+    private readonly ITranslationsService _left = translationsServiceOne
         ?? throw new ArgumentNullException(nameof(translationsServiceOne));
 
-    private readonly IStringTranslationsService _right = translationsServiceTwo
+    private readonly ITranslationsService _right = translationsServiceTwo
         ?? throw new ArgumentNullException(nameof(translationsServiceTwo));
 
     // Fetch from both, then merge with RIGHT overriding LEFT on conflicts.

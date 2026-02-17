@@ -3,7 +3,7 @@ using Umbraco.Cms.Core.Services;
 
 namespace CharlieTango.UmbracoTranslations.BackOffice;
 
-public sealed class FrontendApiTranslationsService(ApiClient.UmbracoTranslationsApiClient frontendUmbracoTranslationsApiClient, ILanguageService languageService) : IStringTranslationsService
+public sealed class FrontendApiTranslationsService(ApiClient.UmbracoTranslationsApiClient frontendUmbracoTranslationsApiClient, ILanguageService languageService) : IFrontendTranslationsService
 {
     public async Task<Dictionary<string, Dictionary<string, string?>>> GetManyAsync(CancellationToken cancellationToken = default)
     {
